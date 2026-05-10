@@ -1,0 +1,244 @@
+/* Toc rail. Fixed 240px left rail showing the rendered document's heading
+ * structure as a collapsible tree. Transparent background, light-gray text;
+ * the heading the reader is currently inside is rendered in a darker gray
+ * (tracked from scroll position via a window scroll listener in toc.js).
+ * Click an entry → smooth-scrolls the matching heading just past the sticky
+ * threshold (handled by `scroll-margin-top` in document.css).
+ *
+ * Visibility model:
+ *   - body[data-toc="true"]  → rail visible, app-shell pushed right by 240px.
+ *   - body[data-rail="true"] → command palette is pinned in rail mode; it
+ *     already takes the 240px slot, so the toc hides while it's open.
+ */
+
+/* Sentinel anchors injected by toc.js right before each heading-block. They
+ * are non-sticky and zero-height, so getBoundingClientRect on them returns
+ * the heading's true natural-flow viewport position regardless of whether
+ * the heading-block is currently sticky-engaged. */
+.toc-sentinel {
+    display: block;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.toc-rail {
+    display: none;
+    position: fixed;
+    /* Sit BELOW the filter strip, not behind it. chrome (56) + filter (36) = 92.
+     * The filter strip already has its own background and z-index above the
+     * rail, so without this offset the "outline" header and first entries
+     * end up underneath the strip. */
+    inset: calc(var(--chrome-h) + 36px) auto 0 0;
+    width: 240px;
+    height: calc(100vh - var(--chrome-h) - 36px);
+    margin: 0;
+    padding: var(--line) calc(var(--gap-column) * 0.5) var(--line) 0.6ch;
+    overflow: auto;
+    background: transparent;
+    font-family: var(--font-margin);
+    font-size: var(--t-meta);
+    color: var(--ink-3);
+    z-index: 8;
+}
+
+[data-toc="true"] .toc-rail { display: block; }
+[data-toc="true"] .app-shell { padding-left: 240px; }
+[data-toc="true"] .filter-strip { padding-left: 240px; }
+
+[data-rail="true"] .toc-rail { display: none; }
+
+/* Floating toggle handle. Sits OUTSIDE the rail so it never overlaps the
+ * outline text or the header divider:
+ *   - rail open  → handle parks just past the rail's right edge (left: 240+gap)
+ *   - rail closed → handle parks at the viewport's left edge (left: 0)
+ * Vertically it sits below the chrome+filter strip with a comfortable gap
+ * (2 line-heights), well clear of the "outline" header. The chevron rotates
+ * 180° when the rail is closed so it always points toward the action. */
+.toc-toggle {
+    position: fixed;
+    top: calc(var(--chrome-h) + 36px + var(--line) * 2);
+    left: 0;
+    width: 22px;
+    height: 36px;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: 0;
+    color: var(--ink-3);
+    cursor: pointer;
+    z-index: 11;
+    transition: left 160ms ease-out, color 140ms ease-out;
+    font-size: 1.2em;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* When the palette-rail is open it owns the 240px slot; hide the toggle so
+ * it doesn't dangle in the wrong place. */
+[data-rail="true"] .toc-toggle { display: none; }
+.toc-toggle:hover { color: var(--ink-2); }
+
+.toc-toggle__glyph {
+    display: inline-block;
+    transition: transform 160ms ease-out;
+}
+[data-toc="false"] .toc-toggle .toc-toggle__glyph { transform: rotate(180deg); }
+/* Park outside the rail (240px wide) with a small gap so the chevron and
+ * the rail's content (entries, divider) never share horizontal space. */
+[data-toc="true"] .toc-toggle { left: calc(240px + 6px); }
+
+.toc-rail__head {
+    text-transform: lowercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    padding: 0 0 calc(var(--line) * 0.4) 1.6ch;
+    margin: 0 0 calc(var(--line) * 0.4);
+    border-bottom: 1px solid var(--ink-thin);
+}
+
+.toc-rail__empty {
+    color: var(--ink-3);
+    margin: 0 0 0 1.6ch;
+    font-style: italic;
+}
+
+.toc-rail__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.toc-rail__item { margin: 0; padding: 0; }
+
+.toc-rail__row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.2ch;
+}
+
+.toc-rail__toggle {
+    flex: 0 0 auto;
+    width: 1.6ch;
+    height: 1.6ch;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: 0;
+    color: var(--ink-3);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    line-height: 1;
+}
+.toc-rail__toggle:hover { color: var(--ink-2); }
+.toc-rail__toggle--leaf { cursor: default; visibility: hidden; }
+
+.toc-rail__toggle-glyph {
+    display: inline-block;
+    transition: transform 120ms ease-out;
+}
+.toc-rail__item[data-expanded="false"] > .toc-rail__row .toc-rail__toggle-glyph {
+    transform: rotate(-90deg);
+}
+.toc-rail__item[data-expanded="false"] > .toc-rail__list {
+    display: none;
+}
+
+/* The clickable entry. Default is light gray; the row marked
+ * [data-active="true"] (set by toc.js scroll tracking) gets a darker gray
+ * to flag "you are here". Hover stays slightly darker than active so it
+ * still reads as interactive. */
+.toc-rail__entry {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.6ch;
+    padding: 0.18em 0 0.18em 0.4ch;
+    color: inherit;
+    text-decoration: none;
+    transition: color 140ms ease-out;
+    cursor: pointer;
+}
+
+.toc-rail__entry:hover,
+.toc-rail__entry:focus-visible {
+    color: var(--ink);
+    outline: none;
+}
+
+/* "You are here": the heading whose section the reader is currently inside.
+ * Tracked via the window scroll listener in toc.js (see setupActiveTracking).
+ * Subtle color shift was hard to see; bumped to full-ink color + medium weight
+ * so the current heading stands out clearly. */
+.toc-rail__item[data-active="true"] > .toc-rail__row > .toc-rail__entry,
+.toc-rail__item[data-active="true"] > .toc-rail__row > .toc-rail__entry:hover {
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.toc-rail__entry-text {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* Hierarchy by indent + style only (no per-level color, since color is
+ * reserved for active vs inactive). Nested ol's add the indentation step. */
+.toc-rail__list .toc-rail__list { padding-left: 1.4ch; }
+
+.toc-rail__item--l1 > .toc-rail__row .toc-rail__entry {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.92em;
+}
+.toc-rail__item--l3 > .toc-rail__row .toc-rail__entry {
+    font-style: italic;
+}
+
+/* Note-count chips: dot + number, no filled disk. Color is in the dot only;
+ * the digit picks up the entry's current color so it tracks active state. */
+.toc-rail__counts {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.5ch;
+    padding-left: 0.5ch;
+}
+
+.toc-rail__count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25ch;
+    color: inherit;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.85em;
+    line-height: 1;
+}
+
+.toc-rail__count-dot {
+    width: 0.55em;
+    height: 0.55em;
+    border-radius: 50%;
+    background: var(--cat, var(--ink-thin));
+    flex: 0 0 auto;
+}
+
+.toc-rail__count[data-category="prose"]     { --cat: var(--cat-prose); }
+.toc-rail__count[data-category="accuracy"]  { --cat: var(--cat-accuracy); }
+.toc-rail__count[data-category="citation"]  { --cat: var(--cat-citation); }
+.toc-rail__count[data-category="structure"] { --cat: var(--cat-structure); }
+.toc-rail__count[data-category="length"]    { --cat: var(--cat-length); }
+.toc-rail__count[data-category="voice"]     { --cat: var(--cat-voice); }
+.toc-rail__count[data-category="keep"]      { --cat: var(--cat-keep); }

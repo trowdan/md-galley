@@ -1,0 +1,308 @@
+/* Marginalia: notes that live in the document's right gutter, vertically
+ * aligned with the line they anchor to. Composer renders in the same column.
+ * The note's vertical position is set via --offset-px (computed by JS). */
+
+.note,
+.composer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    transform: translateY(calc(var(--offset-px, 0) * 1px));
+    transition: opacity 140ms ease-out,
+                color 140ms ease-out,
+                border-left-color 140ms ease-out;
+    padding-left: calc(var(--gap-column) * 0.5);
+    border-left: 2px solid var(--cat, var(--ink-thin));
+    font-family: var(--font-margin);
+    font-size: var(--t-margin);
+    line-height: 1.42;
+    color: var(--ink);
+}
+
+.note__meta,
+.composer__meta {
+    color: var(--ink-3);
+    font-size: var(--t-meta);
+    margin: 0 0 0.4em;
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.5ch;
+}
+.note__meta::before {
+    content: "";
+    display: inline-block;
+    width: 2px;
+    height: 0.85em;
+    background: var(--cat, var(--ink-3));
+    flex-shrink: 0;
+}
+.note__meta-anchor { color: var(--ink-3); }
+.note__meta-cat    { color: var(--ink-2); }
+.note__meta-status { color: var(--ink-3); font-style: italic; }
+
+.note[data-category="prose"]     { --cat: var(--cat-prose); }
+.note[data-category="accuracy"]  { --cat: var(--cat-accuracy); }
+.note[data-category="citation"]  { --cat: var(--cat-citation); }
+.note[data-category="structure"] { --cat: var(--cat-structure); }
+.note[data-category="length"]    { --cat: var(--cat-length); }
+.note[data-category="voice"]     { --cat: var(--cat-voice); }
+.note[data-category="keep"]      { --cat: var(--cat-keep); }
+
+.note__body {
+    margin: 0;
+    word-break: break-word;
+    white-space: pre-wrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.note[data-expanded="true"] .note__body {
+    -webkit-line-clamp: unset;
+    display: block;
+}
+
+/* Optional rationale ("because"), shown only when the note has one. Sits
+ * between body and actions; visually quieter than body, distinct from meta. */
+.note__because {
+    margin: 0.4em 0 0;
+    color: var(--ink-2);
+    font-style: italic;
+    word-break: break-word;
+    white-space: pre-wrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.note[data-expanded="true"] .note__because {
+    -webkit-line-clamp: unset;
+    display: block;
+}
+.note__because-tag {
+    color: var(--ink-3);
+    font-style: normal;
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+    margin-right: 0.3ch;
+}
+.note[data-status="resolved"] .note__because { display: none; }
+
+/* Acceptance trace. Rendered on resolved notes only; visible when filter is
+ * resolved/all. The 'applied' source is dimmed differently to signal the
+ * close came from a drafter roundtrip rather than a manual click. */
+.note__trace {
+    margin: 0.4em 0 0;
+    color: var(--ink-3);
+    font-style: italic;
+    font-size: var(--t-meta);
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+}
+
+/* Anchor-state styling.
+ *  quote  -- default; mark.hl is in the prose, gutter aligns to it.
+ *  block  -- the original quote no longer matches; the gutter card aligns to
+ *            the top of the block the note was created in. Slightly dimmed
+ *            border to signal "no exact passage".
+ *  orphan -- block also missing or ambiguous. Visible badge, dimmed body. */
+.note[data-anchor-state="block"] {
+    border-left-style: dashed;
+    border-left-color: color-mix(in oklch, var(--cat, var(--ink-thin)) 70%, transparent);
+}
+.note[data-anchor-state="orphan"] {
+    border-left-style: dotted;
+    border-left-color: var(--ink-3);
+    color: color-mix(in oklch, var(--ink) 55%, transparent);
+}
+.note__orphan-badge {
+    margin-left: auto;
+    color: var(--ink-3);
+    font-style: italic;
+    font-size: var(--t-meta);
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    padding: 0 0.4ch;
+    border: 1px solid var(--ink-thin);
+    border-radius: 2px;
+}
+
+.note__actions {
+    display: none;
+    gap: 1ch;
+    margin-top: 0.4em;
+    font-size: var(--t-meta);
+}
+.note:hover .note__actions,
+.note:focus-within .note__actions { display: flex; }
+.note[data-editing="true"] .note__actions { display: flex; }
+.note__actions button {
+    color: var(--ink-3);
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+}
+.note__actions button:hover { color: var(--ink); }
+
+.note[data-focused="true"] {
+    border-left-color: var(--mark);
+}
+.note[data-focused="true"] .note__meta {
+    color: var(--mark);
+}
+
+.note[data-status="resolved"] {
+    color: color-mix(in oklch, var(--ink) 38%, transparent);
+    border-left-color: var(--ink-thin);
+}
+.note[data-status="resolved"] .note__body { display: none; }
+.note[data-status="resolved"] .note__meta::before {
+    background: var(--ink-thin);
+}
+
+
+/* Composer */
+.composer {
+    border-left-color: var(--mark);
+    animation: composer-fade 90ms ease-out both;
+    padding-bottom: 0.4em;
+}
+.composer__meta { color: var(--mark); }
+.composer__meta::before {
+    content: "";
+    display: inline-block;
+    width: 2px;
+    height: 0.85em;
+    background: var(--mark);
+    flex-shrink: 0;
+}
+
+.composer__body {
+    width: 100%;
+    min-height: calc(var(--line) * 3);
+    border: 0;
+    background: transparent;
+    resize: vertical;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: 1.42;
+    caret-color: var(--mark);
+    padding: 0;
+}
+.composer__body:focus { outline: 0; }
+.composer__body::placeholder { color: var(--ink-3); }
+
+/* Optional rationale disclosure. Collapsed by default to keep the composer
+ * compact; auto-expanded in edit mode when the persisted note already has
+ * a rationale (the `open` attribute is set in renderComposer). */
+.composer__because-disclosure {
+    margin-top: 0.4em;
+    font-size: var(--t-meta);
+    color: var(--ink-3);
+}
+.composer__because-disclosure summary {
+    cursor: pointer;
+    list-style: none;
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+    color: var(--ink-3);
+    padding: 0.15em 0;
+}
+.composer__because-disclosure summary:hover { color: var(--ink-2); }
+.composer__because-disclosure summary::-webkit-details-marker { display: none; }
+.composer__because-disclosure[open] summary { color: var(--ink-2); }
+.composer__because {
+    width: 100%;
+    margin-top: 0.3em;
+    min-height: calc(var(--line) * 2);
+    border: 0;
+    background: transparent;
+    resize: vertical;
+    color: inherit;
+    font-family: inherit;
+    font-size: var(--t-margin);
+    font-style: italic;
+    line-height: 1.42;
+    caret-color: var(--mark);
+    padding: 0;
+}
+.composer__because:focus { outline: 0; }
+.composer__because::placeholder { color: var(--ink-3); font-style: italic; }
+
+.composer__cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6em 1.2em;
+    margin-top: 0.6em;
+    font-size: var(--t-meta);
+    color: var(--ink-3);
+    text-transform: lowercase;
+}
+.composer__cats button {
+    color: inherit;
+    border-bottom: 2px solid transparent;
+    padding: 0 0 0.15em;
+    line-height: 1;
+}
+.composer__cats button:hover { color: var(--ink); }
+.composer__cats button[aria-checked="true"] {
+    color: var(--ink);
+    border-bottom-color: var(--cat, var(--mark));
+}
+.composer__cats button[data-cat="prose"]     { --cat: var(--cat-prose); }
+.composer__cats button[data-cat="accuracy"]  { --cat: var(--cat-accuracy); }
+.composer__cats button[data-cat="citation"]  { --cat: var(--cat-citation); }
+.composer__cats button[data-cat="structure"] { --cat: var(--cat-structure); }
+.composer__cats button[data-cat="length"]    { --cat: var(--cat-length); }
+.composer__cats button[data-cat="voice"]     { --cat: var(--cat-voice); }
+.composer__cats button[data-cat="keep"]      { --cat: var(--cat-keep); }
+
+.composer__hint {
+    margin-top: 0.6em;
+    color: var(--ink-3);
+    font-size: var(--t-meta);
+}
+.composer__hint kbd {
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--ink-2);
+    padding: 0;
+}
+
+@keyframes composer-fade {
+    from { opacity: 0; transform: translateY(calc(var(--offset-px, 0) * 1px - 2px)); }
+    to   { opacity: 1; transform: translateY(calc(var(--offset-px, 0) * 1px)); }
+}
+
+/* Empty-state hint shown in the gutter when no notes exist on this file. */
+.gutter-empty {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding-left: calc(var(--gap-column) * 0.5);
+    color: var(--ink-3);
+    font-family: var(--font-margin);
+    font-size: var(--t-margin);
+    line-height: 1.5;
+}
+.gutter-empty kbd {
+    color: var(--ink-2);
+    font-family: inherit;
+    font-size: inherit;
+}
+.gutter-empty .dots {
+    margin-top: 0.8em;
+    display: flex;
+    gap: 0.5ch;
+}
+.gutter-empty .dots span {
+    width: 0.55em;
+    height: 0.55em;
+    border-radius: 50%;
+    background: var(--cat);
+    opacity: 0.65;
+}

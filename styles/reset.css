@@ -1,0 +1,65 @@
+/* Reset. Conservative, preserves serif headings inside the document by not
+ * stomping their margins from the cascade. */
+
+*, *::before, *::after { box-sizing: border-box; }
+/* No fixed `height: 100%` on html/body. With it, body's containing block is
+ * one viewport tall, which bounds `position: sticky` ranges — chrome and the
+ * filter strip would scroll off after the first viewport instead of staying
+ * pinned. Letting body's height be content-driven keeps the sticky range as
+ * the full document. `min-height: 100%` on html keeps short pages filling the
+ * viewport (so the paper background still covers everything). The gate uses
+ * `position: fixed; inset: 0` already, so it doesn't depend on body height. */
+html {
+    min-height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+}
+body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-chrome);
+    font-size: var(--t-chrome);
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+img, svg, video { display: block; max-width: 100%; }
+button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    padding: 0;
+}
+input, textarea {
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    outline: 0;
+}
+ol, ul { list-style: none; padding: 0; margin: 0; }
+a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--ink-thin); text-underline-offset: 0.2em; }
+a:hover { text-decoration-color: var(--mark); }
+
+::selection { background: var(--selection); color: inherit; }
+
+[hidden] { display: none !important; }
+
+:focus-visible {
+    outline: 1px solid var(--mark);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

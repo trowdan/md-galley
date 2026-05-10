@@ -1,0 +1,160 @@
+/* Browser gate, permission gate, post-reset notice, confirm modal.
+ * Typeset as a frontispiece, not a card. */
+
+.gate {
+    position: fixed;
+    inset: 0;
+    background: var(--paper);
+    color: var(--ink);
+    display: grid;
+    grid-template-columns:
+        [side-start] minmax(var(--gap-side), 1fr)
+        [text-start] var(--measure-text)
+        [text-end] minmax(var(--gap-side), 1fr) [side-end];
+    align-items: center;
+    z-index: 100;
+    padding: 0;
+    overflow: auto;
+}
+.gate__inner {
+    grid-column: text;
+    padding: calc(var(--line) * 4) 0;
+    max-width: 56ch;
+}
+.gate__kicker {
+    font-family: var(--font-margin);
+    font-size: var(--t-meta);
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-3);
+    margin: 0 0 calc(var(--line) * 0.4);
+}
+.gate__kicker--danger { color: var(--cat-accuracy); }
+
+.gate__title {
+    font-family: var(--font-prose);
+    font-weight: 600;
+    font-size: var(--t-display);
+    line-height: var(--t-display-lh);
+    letter-spacing: -0.018em;
+    margin: 0 0 calc(var(--line) * 0.8);
+    padding-bottom: calc(var(--line) * 0.4);
+    border-bottom: 1px solid var(--ink);
+}
+.gate__title em { font-style: italic; }
+
+.gate__body {
+    font-family: var(--font-prose);
+    font-size: var(--t-prose);
+    line-height: var(--line);
+    color: var(--ink-2);
+    margin: 0 0 var(--line);
+}
+.gate__body strong { color: var(--ink); font-weight: 600; }
+.gate__body em {
+    font-style: italic;
+    color: var(--mark);
+    background: var(--mark-soft);
+    padding: 0 0.15em;
+}
+.gate__body code {
+    font-family: var(--font-margin);
+    font-size: 0.92em;
+    background: var(--paper-deep);
+    padding: 0.1em 0.35em;
+}
+
+.gate__supported {
+    margin: var(--line) 0;
+    font-family: var(--font-margin);
+    font-size: var(--t-meta);
+    color: var(--ink-3);
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+}
+.gate__supported span { color: var(--ink); margin-right: 1.5ch; }
+
+.gate__cta-row {
+    margin-top: calc(var(--line) * 1.2);
+    display: flex;
+    align-items: center;
+    gap: 2ch;
+    flex-wrap: wrap;
+}
+
+.gate__cta {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.8ch;
+    color: var(--ink);
+    font-family: var(--font-margin);
+    font-size: var(--t-prose-quote);
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+    border: 1px solid var(--ink);
+    padding: 0.55em 1.2em;
+    background: transparent;
+    transition: background 140ms ease-out, color 140ms ease-out, border-color 140ms ease-out;
+}
+.gate__cta:hover {
+    background: var(--ink);
+    color: var(--paper);
+}
+.gate__cta-arrow {
+    transition: transform 140ms ease-out;
+    display: inline-block;
+}
+.gate__cta:hover .gate__cta-arrow { transform: translateX(2px); }
+.gate__cta:focus-visible { outline-offset: 4px; }
+
+.gate__cta--danger {
+    color: var(--cat-accuracy);
+    border-color: var(--cat-accuracy);
+}
+.gate__cta--danger:hover {
+    background: var(--cat-accuracy);
+    color: var(--paper);
+}
+
+.gate__cta--ghost {
+    border-color: transparent;
+    color: var(--ink-2);
+    padding: 0.55em 0.6em;
+}
+.gate__cta--ghost:hover {
+    background: transparent;
+    color: var(--ink);
+    border-color: transparent;
+}
+
+.gate__path {
+    font-family: var(--font-margin);
+    font-size: var(--t-meta);
+    color: var(--ink-3);
+}
+
+/* Toast: paper background, single hairline, no fill. */
+.toast {
+    position: fixed;
+    bottom: var(--line);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--ink-thin);
+    padding: 0.4em 1.2em;
+    font-family: var(--font-margin);
+    font-size: var(--t-meta);
+    text-transform: lowercase;
+    z-index: 40;
+    animation: toast-fade 140ms ease-out;
+}
+.toast::before {
+    content: "·";
+    color: var(--mark);
+    margin-right: 1ch;
+}
+@keyframes toast-fade {
+    from { opacity: 0; transform: translateX(-50%) translateY(2px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

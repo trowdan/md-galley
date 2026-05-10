@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MDGalley</title>
+
+    <link rel="stylesheet" href="styles/tokens.css">
+    <link rel="stylesheet" href="styles/reset.css">
+    <link rel="stylesheet" href="styles/document.css">
+    <link rel="stylesheet" href="styles/chrome.css">
+    <link rel="stylesheet" href="styles/marginalia.css">
+    <link rel="stylesheet" href="styles/palette.css">
+    <link rel="stylesheet" href="styles/toc.css">
+    <link rel="stylesheet" href="styles/gate.css">
+</head>
+
+<body>
+    <div id="gate" class="gate" hidden></div>
+
+    <header id="chrome" class="chrome" hidden>
+        <div class="chrome__left">
+            <button class="chrome__brand" id="brand" title="Open command palette">MDGalley</button>
+            <span class="chrome__sep" aria-hidden="true">·</span>
+            <span class="chrome__file" id="chrome-file">no file open</span>
+        </div>
+        <div class="chrome__right">
+            <button class="chrome__cmd" id="open-palette" title="Open command palette (⌘K)">
+                <svg class="chrome__cmd-svg" viewBox="0 0 14 14" aria-hidden="true">
+                    <rect x="2" y="2" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.1"/>
+                    <line x1="2" y1="5.4" x2="12" y2="5.4" stroke="currentColor" stroke-width="1.1"/>
+                    <circle cx="4" cy="3.7" r="0.55" fill="currentColor"/>
+                </svg>
+                <span class="chrome__cmd-key">(⌘K)</span>
+            </button>
+            <button class="chrome__cmd" id="open-workspace" title="Open workspace (⌘O)">
+                <svg class="chrome__cmd-svg" viewBox="0 0 14 14" aria-hidden="true">
+                    <path d="M1.5 4.2 V 11 a 0.8 0.8 0 0 0 0.8 0.8 H 11.7 a 0.8 0.8 0 0 0 0.8 -0.8 V 5 a 0.8 0.8 0 0 0 -0.8 -0.8 H 6.5 L 5.2 2.7 a 0.8 0.8 0 0 0 -0.6 -0.3 H 2.3 a 0.8 0.8 0 0 0 -0.8 0.8 Z" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                </svg>
+                <span class="chrome__cmd-key">(⌘O)</span>
+            </button>
+            <button class="chrome__cmd" id="toggle-theme" title="Toggle theme">
+                <span class="chrome__cmd-glyph" aria-hidden="true">◐</span>
+            </button>
+            <div class="chrome__menu-host">
+                <button class="chrome__cmd" id="open-settings" title="Settings"
+                        aria-haspopup="menu" aria-expanded="false">
+                    <span class="chrome__cmd-glyph" aria-hidden="true">⚙</span>
+                </button>
+                <div id="settings-menu" class="settings-menu" role="menu" hidden>
+                    <button class="settings-menu__item" data-action="continuous" type="button" role="menuitem">
+                        <span class="settings-menu__glyph" aria-hidden="true">⤢</span>
+                        <span class="settings-menu__label" id="continuous-toggle-label">single document across files</span>
+                        <span class="settings-menu__hint">render the whole workspace as one continuous text (page reload)</span>
+                    </button>
+                    <button class="settings-menu__item" data-action="reset" type="button" role="menuitem">
+                        <span class="settings-menu__glyph" aria-hidden="true">↻</span>
+                        <span class="settings-menu__label">reset mdgalley</span>
+                        <span class="settings-menu__hint">erases notes, theme, .mdgalley folder</span>
+                    </button>
+                </div>
+            </div>
+            <button class="chrome__action" id="export-review" disabled>export 0</button>
+        </div>
+    </header>
+
+    <dialog id="pass-dialog" class="pass-dialog" aria-labelledby="pass-dialog-title">
+        <div class="pass-dialog__inner">
+            <header class="pass-dialog__head">
+                <h2 class="pass-dialog__title" id="pass-dialog-title">passes</h2>
+                <button type="button" class="pass-dialog__close" data-action="close" aria-label="close">×</button>
+            </header>
+            <p class="pass-dialog__intro">
+                A pass is a declared scope of review activity. Notes you create while a pass is active carry its id; the gutter filters to only that pass. Passes are resumable.
+            </p>
+
+            <section class="pass-dialog__active" data-section="active" hidden>
+                <h3 class="pass-dialog__h3">active</h3>
+                <div class="pass-dialog__active-row">
+                    <span class="pass-dialog__active-name" id="pass-dialog-active-name"></span>
+                    <button type="button" class="pass-dialog__action pass-dialog__action--end" data-action="end">end pass</button>
+                </div>
+            </section>
+
+            <section class="pass-dialog__list-section" data-section="list" hidden>
+                <h3 class="pass-dialog__h3" id="pass-dialog-list-h3">resume an earlier pass</h3>
+                <ul class="pass-dialog__items" id="pass-dialog-items"></ul>
+            </section>
+
+            <section class="pass-dialog__create-section">
+                <h3 class="pass-dialog__h3">start a new pass</h3>
+                <form class="pass-dialog__create" id="pass-dialog-create">
+                    <input type="text" id="pass-dialog-input" class="pass-dialog__input"
+                           placeholder="name (e.g. accuracy, voice, structure)"
+                           autocomplete="off" maxlength="64" required />
+                    <button type="submit" class="pass-dialog__action pass-dialog__action--primary">start</button>
+                </form>
+            </section>
+        </div>
+    </dialog>
+
+    <nav id="filter-strip" class="filter-strip" aria-label="Filter notes by status" hidden>
+        <div class="filter-strip__inner">
+            <span class="filter-strip__label">filter</span>
+            <button data-filter="open" aria-pressed="true">open</button>
+            <button data-filter="resolved">resolved</button>
+            <button data-filter="all">all</button>
+            <span class="filter-strip__sep" aria-hidden="true">·</span>
+            <button type="button" class="filter-strip__pass-chip" id="filter-strip-pass" data-state="none">
+                <span class="filter-strip__pass-chip-label">+ pass</span>
+            </button>
+        </div>
+    </nav>
+
+    <button id="toc-toggle" class="toc-toggle" type="button"
+            aria-controls="toc-rail" aria-expanded="true" aria-label="Toggle outline"
+            title="Toggle outline">
+        <span class="toc-toggle__glyph" aria-hidden="true">‹</span>
+    </button>
+    <aside id="toc-rail" class="toc-rail" aria-label="Document outline"></aside>
+
+    <main id="app-shell" class="app-shell" hidden>
+        <article id="document" class="document" data-show-lines="false" data-filter="open">
+            <div id="document-text" class="document__text"></div>
+            <div id="document-gutter" class="document__gutter"></div>
+        </article>
+    </main>
+
+    <dialog id="palette" class="palette">
+        <div class="palette__head">
+            <input id="palette-search" class="palette__search"
+                   placeholder="open document, file, or section" autocomplete="off">
+            <kbd class="palette__hint">esc</kbd>
+        </div>
+        <ol id="palette-list" class="palette__list"></ol>
+        <div class="palette__footer">
+            <span><kbd>↑</kbd> <kbd>↓</kbd> navigate</span>
+            <span><kbd>↵</kbd> open</span>
+            <span><kbd>⌘O</kbd> workspace</span>
+            <span><kbd>esc</kbd> close</span>
+        </div>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

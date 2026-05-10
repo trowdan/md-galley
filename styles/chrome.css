@@ -1,0 +1,240 @@
+/* App chrome. Top bar set in mono and small sans, hairline beneath. */
+
+.chrome {
+    height: var(--chrome-h);
+    padding: 0 var(--gap-side);
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-chrome);
+    font-size: var(--t-chrome);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--ink-thin);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    gap: 1ch;
+}
+
+.chrome__left {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6em;
+    min-width: 0;
+    flex: 1;
+}
+
+.chrome__brand {
+    font-family: var(--font-prose);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+    flex-shrink: 0;
+}
+.chrome__brand:hover { color: var(--mark); }
+
+.chrome__sep {
+    color: var(--ink-3);
+    margin: 0 0.4em;
+    font-family: var(--font-margin);
+    flex-shrink: 0;
+}
+
+.chrome__file {
+    color: var(--ink-2);
+    font-family: var(--font-margin);
+    font-size: var(--t-meta);
+    text-transform: lowercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.chrome__right {
+    display: flex;
+    align-items: center;
+    gap: 1ch;
+    flex-shrink: 0;
+}
+
+/* Command-style buttons: small SVG icon + keystroke in subdued mono parens. */
+.chrome__cmd {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5ch;
+    color: var(--ink-2);
+    padding: 0.4em 0.5em;
+    border-radius: 0;
+    transition: color 140ms ease-out;
+}
+.chrome__cmd:hover { color: var(--ink); }
+.chrome__cmd[aria-pressed="true"] { color: var(--mark); }
+.chrome__cmd-svg {
+    width: 14px;
+    height: 14px;
+    color: inherit;
+    display: block;
+}
+.chrome__cmd-glyph {
+    font-size: 13px;
+    line-height: 1;
+    display: inline-block;
+    transform: translateY(-0.5px);
+}
+.chrome__cmd-key {
+    font-family: var(--font-margin);
+    font-size: 11px;
+    color: var(--ink-3);
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+}
+.chrome__cmd:hover .chrome__cmd-key { color: var(--ink-2); }
+
+/* Settings popover anchored under the gear button. Same hairline language
+ * as the chrome itself, no shadow, no fill, no danger-color. The reset
+ * action stays neutral; the gate confirm modal is the actual safety. */
+.chrome__menu-host {
+    position: relative;
+    display: inline-flex;
+}
+.settings-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 240px;
+    background: var(--paper);
+    border: 1px solid var(--ink-thin);
+    padding: 0.3em 0;
+    z-index: 20;
+    font-family: var(--font-margin);
+    font-size: var(--t-chrome);
+}
+.settings-menu__item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 1ch;
+    align-items: baseline;
+    width: 100%;
+    text-align: left;
+    padding: 0.5em 0.8em;
+    color: var(--ink-2);
+    transition: background 140ms ease-out, color 140ms ease-out;
+}
+.settings-menu__item:hover,
+.settings-menu__item:focus-visible {
+    background: var(--mark-soft);
+    color: var(--ink);
+    outline: none;
+}
+.settings-menu__glyph {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    font-size: 1.1rem;
+    line-height: 1;
+    align-self: center;
+    color: var(--ink-3);
+}
+.settings-menu__item:hover .settings-menu__glyph { color: var(--ink-2); }
+.settings-menu__label {
+    grid-column: 2;
+    grid-row: 1;
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+}
+.settings-menu__hint {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: var(--t-meta);
+    color: var(--ink-3);
+}
+
+.chrome__action {
+    color: var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding: 0 0 0.15em;
+    font-family: var(--font-margin);
+    font-size: var(--t-chrome);
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+    margin-left: 0.5ch;
+}
+.chrome__action:hover { border-bottom-color: var(--mark); color: var(--mark); }
+.chrome__action[disabled] {
+    color: var(--ink-3);
+    border-bottom-color: var(--ink-thin);
+    cursor: not-allowed;
+}
+
+/* Filter strip: lives below chrome, right-aligned to the gutter column.
+ * Sticky so the reviewer can flip status without scrolling back to top. */
+.filter-strip {
+    background: var(--paper);
+    border-bottom: 1px solid var(--paper-edge);
+    position: sticky;
+    top: var(--chrome-h);
+    z-index: 9;
+    display: grid;
+    grid-template-columns:
+        [side-start] minmax(var(--gap-side), 1fr)
+        [text-start] var(--measure-text)
+        [text-end gap-start] var(--gap-column)
+        [gap-end margin-start] var(--measure-margin)
+        [margin-end] minmax(var(--gap-side), 1fr) [side-end];
+    align-items: center;
+    height: 36px;
+    font-family: var(--font-margin);
+    font-size: var(--t-meta);
+    color: var(--ink-3);
+    text-transform: lowercase;
+}
+.filter-strip__inner {
+    grid-column: margin;
+    display: flex;
+    align-items: baseline;
+    gap: 1.4ch;
+}
+.filter-strip__label {
+    color: var(--ink-3);
+    margin-right: 0.4ch;
+}
+.filter-strip__inner button {
+    color: inherit;
+    border-bottom: 2px solid transparent;
+    padding: 0 0 0.15em;
+    transition: color 140ms ease-out, border-color 140ms ease-out;
+}
+.filter-strip__inner button:hover { color: var(--ink); }
+.filter-strip__inner button[aria-pressed="true"] {
+    color: var(--ink);
+    border-bottom-color: var(--mark);
+}
+
+/* Pass chip (named-pass scope). One-button entry point that opens the pass
+ * dialog. Inactive shows `+ pass`; active shows the current pass name with
+ * an underline accent. The dialog handles all CRUD; the chip never decides. */
+.filter-strip__sep {
+    color: var(--ink-thin);
+    margin: 0 0.6ch;
+}
+.filter-strip__pass-chip {
+    color: var(--ink-3);
+    border-bottom: 2px solid transparent;
+    padding: 0 0 0.15em;
+    transition: color 140ms ease-out, border-color 140ms ease-out;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.filter-strip__pass-chip:hover { color: var(--ink); }
+.filter-strip__pass-chip[data-state="active"] {
+    color: var(--ink);
+    border-bottom-color: var(--mark);
+}
+.filter-strip__pass-chip-label { display: inline; }
+
+[data-rail="true"] .filter-strip { padding-left: 240px; }

@@ -1,0 +1,99 @@
+/* Design tokens. OKLCH palette, single editorial type system, baseline rhythm.
+ * Reference: tools/reviewer/_audits/visual-direction.md
+ *
+ * Type stack: the build relies on the system fallbacks below (Charter for
+ * the prose serif, ui-monospace for code, system-ui for chrome). All three
+ * ship on macOS. To use Source Serif 4 / Inter Tight / JetBrains Mono
+ * instead, add a Google Fonts <link> in index.html or vendor woff2 files
+ * under tools/reviewer/vendor/fonts/ and add @font-face blocks here. */
+
+:root {
+    /* Type families. Sectra (commercial) + GT America (commercial) are the
+     * intended faces. Source Serif 4, Inter Tight, JetBrains Mono are the
+     * free fallbacks bundled here. License Sectra later and swap by adding
+     * @font-face above. */
+    --font-prose:  "Sectra", "Source Serif 4", Charter, Georgia, serif;
+    --font-margin: "Marginalia", "JetBrains Mono", ui-monospace, monospace;
+    --font-chrome: "GT America", "Inter Tight", system-ui, sans-serif;
+    --font-code:   "JetBrains Mono", ui-monospace, monospace;
+
+    /* Type scale */
+    --t-display:      3.25rem;   /* 52 px document title */
+    --t-display-lh:   1.04;
+    --t-h2:           1.625rem;
+    --t-h2-lh:        1.18;
+    --t-h3:           1.125rem;
+    --t-h3-lh:        1.3;
+    --t-prose:        1.1875rem; /* 19 px body */
+    --t-prose-lh:     1.62;
+    --t-prose-quote:  1.0625rem;
+    --t-margin:       0.8125rem;
+    --t-meta:         0.6875rem;
+    --t-chrome:       0.8125rem;
+    --t-code:         0.875rem;
+
+    /* Vertical rhythm: 19 px body x 1.6 line-height = 30.4 px baseline.
+     * Every block aligns to a multiple of --line. */
+    --line:           1.9rem;
+    --measure-text:   62ch;
+    --measure-margin: 28ch;
+    --gap-column:     4ch;
+    --gap-side:       clamp(1.5rem, 4vw, 4.5rem);
+    --chrome-h:       56px;
+}
+
+[data-theme="light"] {
+    --paper:        oklch(98.5% 0.006 85);
+    --paper-deep:   oklch(96.8% 0.008 85);
+    --paper-edge:   oklch(93%   0.010 85);
+
+    --ink:          oklch(20%   0.015 60);
+    --ink-2:        oklch(42%   0.012 60);
+    --ink-3:        oklch(62%   0.010 60);
+    --ink-thin:     oklch(82%   0.008 60);
+
+    --mark:         oklch(48%   0.18  25);
+    --mark-soft:    oklch(48%   0.18  25 / 0.10);
+    --selection:    oklch(48%   0.18  25 / 0.18);
+
+    --cat-prose:     oklch(78% 0.13  85);
+    --cat-accuracy:  oklch(62% 0.18  25);
+    --cat-citation:  oklch(70% 0.14  280);
+    --cat-structure: oklch(70% 0.14  235);
+    --cat-length:    oklch(72% 0.12  150);
+    --cat-voice:     oklch(70% 0.15  330);
+    --cat-keep:      oklch(60% 0.14  155);
+
+    --hl-alpha:        0.22;
+    --hl-alpha-active: 0.40;
+
+    color-scheme: light;
+}
+
+[data-theme="dark"] {
+    --paper:        oklch(16%   0.012 60);
+    --paper-deep:   oklch(20%   0.014 60);
+    --paper-edge:   oklch(28%   0.014 60);
+
+    --ink:          oklch(92%   0.012 80);
+    --ink-2:        oklch(72%   0.010 80);
+    --ink-3:        oklch(54%   0.010 80);
+    --ink-thin:     oklch(36%   0.012 60);
+
+    --mark:         oklch(72%   0.18  25);
+    --mark-soft:    oklch(72%   0.18  25 / 0.16);
+    --selection:    oklch(72%   0.18  25 / 0.28);
+
+    --cat-prose:     oklch(82% 0.14  85);
+    --cat-accuracy:  oklch(70% 0.20  25);
+    --cat-citation:  oklch(76% 0.16  280);
+    --cat-structure: oklch(74% 0.16  235);
+    --cat-length:    oklch(76% 0.14  150);
+    --cat-voice:     oklch(74% 0.17  330);
+    --cat-keep:      oklch(70% 0.16  155);
+
+    --hl-alpha:        0.30;
+    --hl-alpha-active: 0.52;
+
+    color-scheme: dark;
+}

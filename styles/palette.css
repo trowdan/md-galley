@@ -1,0 +1,300 @@
+/* Command palette + pinned-rail mode. Same component, two layouts. */
+
+.palette[open] {
+    position: fixed;
+    inset: 12vh auto auto 50%;
+    transform: translateX(-50%);
+    width: min(560px, 92vw);
+    max-height: 70vh;
+    background: var(--paper);
+    border: 1px solid var(--ink-thin);
+    border-radius: 0;
+    box-shadow: none;
+    padding: var(--line);
+    color: var(--ink);
+    font-family: var(--font-chrome);
+    font-size: var(--t-chrome);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+}
+.palette::backdrop {
+    background: color-mix(in oklch, var(--paper) 60%, transparent);
+    backdrop-filter: none;
+}
+
+.palette__head {
+    display: flex;
+    align-items: baseline;
+    gap: 1ch;
+    border-bottom: 1px solid var(--ink-thin);
+    padding-bottom: 0.6em;
+    margin-bottom: var(--line);
+}
+
+.palette__search {
+    flex: 1;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--font-prose);
+    font-size: var(--t-prose);
+    line-height: 1.4;
+    caret-color: var(--mark);
+}
+.palette__search:focus { outline: 0; }
+.palette__search::placeholder { color: var(--ink-3); font-style: italic; }
+
+.palette__hint {
+    font-family: var(--font-margin);
+    font-size: var(--t-meta);
+    color: var(--ink-3);
+    text-transform: lowercase;
+}
+
+.palette__list {
+    overflow: auto;
+    flex: 1;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+.palette__list li { margin: 0; }
+.palette__list button {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    align-items: baseline;
+    column-gap: 1.5ch;
+    width: 100%;
+    text-align: left;
+    padding: 0.55em 0.4em;
+    color: inherit;
+    border-radius: 0;
+}
+.palette__list button:hover,
+.palette__list button[aria-selected="true"] {
+    background: var(--mark-soft);
+}
+.palette__title {
+    font-family: var(--font-prose);
+    font-size: var(--t-prose-quote);
+    color: var(--ink);
+    grid-column: 1;
+    grid-row: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.palette__path {
+    font-family: var(--font-margin);
+    font-size: var(--t-meta);
+    color: var(--ink-3);
+    grid-column: 1;
+    grid-row: 2;
+}
+.palette__ratio {
+    font-family: var(--font-margin);
+    font-size: var(--t-chrome);
+    color: var(--ink-2);
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+}
+.palette__empty {
+    color: var(--ink-3);
+    padding: var(--line) 0;
+    font-style: italic;
+}
+
+.palette__footer {
+    margin-top: var(--line);
+    padding-top: 0.5em;
+    border-top: 1px solid var(--ink-thin);
+    color: var(--ink-3);
+    font-family: var(--font-margin);
+    font-size: var(--t-meta);
+    display: flex;
+    gap: 1.5ch;
+    flex-wrap: wrap;
+}
+.palette__footer kbd {
+    color: var(--ink-2);
+    font-family: inherit;
+    font-size: inherit;
+}
+
+/* Pass dialog. Modal that consolidates every pass action: end / resume /
+ * switch / forget / start a new pass. Same dialog aesthetic as the palette
+ * (typeset, no shadows, ink palette) but content-shaped, not list-shaped. */
+.pass-dialog[open] {
+    position: fixed;
+    inset: 12vh auto auto 50%;
+    transform: translateX(-50%);
+    width: min(520px, 92vw);
+    max-height: 76vh;
+    background: var(--paper);
+    border: 1px solid var(--ink-thin);
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    color: var(--ink);
+    font-family: var(--font-chrome);
+    font-size: var(--t-chrome);
+    overflow: hidden;
+    z-index: 50;
+}
+.pass-dialog::backdrop {
+    background: color-mix(in oklch, var(--paper) 60%, transparent);
+    backdrop-filter: none;
+}
+.pass-dialog__inner {
+    display: flex;
+    flex-direction: column;
+    max-height: 76vh;
+    overflow: auto;
+    padding: var(--line);
+    gap: var(--line);
+}
+.pass-dialog__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1ch;
+    border-bottom: 1px solid var(--ink-thin);
+    padding-bottom: 0.6em;
+}
+.pass-dialog__title {
+    margin: 0;
+    font-family: var(--font-prose);
+    font-size: var(--t-h3);
+    color: var(--ink);
+}
+.pass-dialog__close {
+    border: 0;
+    background: transparent;
+    color: var(--ink-3);
+    font-size: 1.4em;
+    line-height: 1;
+    padding: 0 0.2ch;
+    cursor: pointer;
+}
+.pass-dialog__close:hover { color: var(--ink); }
+
+.pass-dialog__intro {
+    margin: 0;
+    color: var(--ink-2);
+    font-family: var(--font-prose);
+    font-size: var(--t-prose);
+    line-height: 1.5;
+}
+.pass-dialog__h3 {
+    margin: 0 0 0.6em;
+    color: var(--ink-3);
+    font-family: var(--font-margin);
+    font-size: var(--t-meta);
+    text-transform: lowercase;
+    letter-spacing: 0.06em;
+    font-weight: 400;
+}
+
+.pass-dialog__active-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1ch;
+    padding: 0.4em 0;
+    border-bottom: 1px solid var(--ink-thin);
+}
+.pass-dialog__active-name {
+    color: var(--ink);
+    font-weight: 500;
+}
+
+.pass-dialog__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+.pass-dialog__item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    column-gap: 1ch;
+    align-items: baseline;
+    padding: 0.5em 0;
+    border-bottom: 1px solid var(--ink-thin);
+}
+.pass-dialog__item:last-child { border-bottom: 0; }
+.pass-dialog__item-name { color: var(--ink); }
+.pass-dialog__item-meta {
+    grid-column: 1 / 2;
+    grid-row: 2;
+    color: var(--ink-3);
+    font-size: var(--t-meta);
+}
+
+.pass-dialog__create {
+    display: flex;
+    gap: 1ch;
+    align-items: baseline;
+}
+.pass-dialog__input {
+    flex: 1;
+    border: 0;
+    border-bottom: 1px solid var(--ink-thin);
+    padding: 0.3em 0;
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--font-prose);
+    font-size: var(--t-prose);
+    caret-color: var(--mark);
+}
+.pass-dialog__input:focus {
+    outline: 0;
+    border-bottom-color: var(--mark);
+}
+.pass-dialog__input::placeholder { color: var(--ink-3); font-style: italic; }
+
+.pass-dialog__action {
+    color: var(--ink-3);
+    border: 0;
+    background: transparent;
+    padding: 0.2em 0.6ch;
+    font-family: inherit;
+    font-size: inherit;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 140ms ease-out, border-color 140ms ease-out;
+}
+.pass-dialog__action:hover { color: var(--ink); }
+.pass-dialog__action--primary {
+    color: var(--ink);
+    border-bottom-color: var(--mark);
+}
+.pass-dialog__action--end:hover { color: var(--mark); }
+.pass-dialog__action--danger:hover { color: var(--mark); }
+
+/* Pinned-rail mode: a 240 px left rail. Triggered by data-mode="rail" on body. */
+[data-rail="true"] .palette[open] {
+    position: fixed;
+    inset: var(--chrome-h) auto 0 0;
+    transform: none;
+    width: 240px;
+    max-height: none;
+    height: calc(100vh - var(--chrome-h));
+    border: 0;
+    border-right: 1px solid var(--ink-thin);
+    padding: var(--line) calc(var(--gap-column) * 0.5);
+    overflow: auto;
+    background: var(--paper-deep);
+}
+[data-rail="true"] .palette__head {
+    border-bottom-color: var(--ink-thin);
+}
+[data-rail="true"] .palette__hint { display: none; }
+[data-rail="true"] .palette__footer { display: none; }
+[data-rail="true"] .app-shell { padding-left: 240px; }
