@@ -42,6 +42,9 @@ export const Events = Object.freeze({
     ANNOTATION_FOCUSED: "annotation:focused",
 
     LAYOUT_REFLOW: "layout:reflow",
+    ANCHOR_STATES_RESOLVED: "anchor:states-resolved",
+
+    PASS_CHANGED: "pass:changed",
 
     FILTER_CHANGED: "filter:changed",
     THEME_CHANGED: "theme:changed",

@@ -85,7 +85,7 @@ Notes are grouped by file, then ordered open-first, then by source line. Quoted 
 
 ### Schema
 
-Every exported review file declares its contract in the front matter via `schema: bookwright-review/MAJOR.MINOR`. The current version is `bookwright-review/1.0`. The full per-version contract (front matter keys, per-note fields, category and scope vocabulary, prompt-injection rules, and the policy for files predating the contract) lives in [`SCHEMA.md`](SCHEMA.md). Downstream agents should read it once and key off the version string.
+Every exported review file declares its contract in the front matter via `schema: bookwright-review/MAJOR.MINOR`. The current version is `bookwright-review/1.4`. v1.1 added an optional per-note `because` field for rationale. v1.2 adds an optional per-note `block` field for paragraph-level fallback re-anchoring after source edits. v1.3 adds optional per-note `resolved_at` and `accepted_source` fields recording the acceptance trace (whether a note closed by manual click or by a drafter's `reviews/*-applied.md` roundtrip). v1.4 adds an optional per-note `pass_id` field tying the note to a named pass (see the sibling `bookwright-passes/1.0` artefact). All bumps are additive: v1.0 consumers parse newer files safely and ignore unknown fields. The full per-version contract (front matter keys, per-note fields, category and scope vocabulary, prompt-injection rules, sibling contracts, and the policy for files predating the contract) lives in [`SCHEMA.md`](SCHEMA.md). Downstream agents should read it once and key off the version string.
 
 ## Architecture
 

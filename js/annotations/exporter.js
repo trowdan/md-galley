@@ -1,9 +1,9 @@
 // Review exporter. Produces a single Markdown file designed to be fed to a
 // downstream AI agent. Output rules:
 //   1. Every value that traces back to user-controlled text (chapterTitle,
-//      heading, quote, body) is wrapped in fenced code blocks or otherwise
-//      neutralised, so a malicious input cannot break out into the agent's
-//      instruction stream.
+//      heading, quote, body, because) is wrapped in fenced code blocks or
+//      otherwise neutralised, so a malicious input cannot break out into
+//      the agent's instruction stream.
 //   2. Status, scope, priority, category are rendered as structured fields
 //      a downstream agent can parse deterministically.
 //   3. Notes are grouped by file then ordered open-first, then by line.
@@ -17,7 +17,7 @@ import { CategoryLabels, Statuses } from "./annotation.js";
 // Format: "bookwright-review/MAJOR.MINOR".
 //   MAJOR -- breaking change (renamed/removed field, changed semantics)
 //   MINOR -- additive backward-compatible field
-export const REVIEW_SCHEMA_VERSION = "bookwright-review/1.0";
+export const REVIEW_SCHEMA_VERSION = "bookwright-review/1.4";
 
 /**
  * @param {Map<string, import("./annotation.js").Annotation[]>} byFile
@@ -25,13 +25,21 @@ export const REVIEW_SCHEMA_VERSION = "bookwright-review/1.0";
  * @returns {{ filename: string, content: string }}
  */
 export function buildReviewMarkdown(byFile, meta = {}) {
-    const date = meta.date ?? new Date().toISOString().slice(0, 10);
+    const date = isValidIsoDate(meta.date) ? meta.date : new Date().toISOString().slice(0, 10);
     const includeResolved = meta.includeResolved ?? true;
     const filename = `reviews/${date}-review.md`;
 
-    const tally = totals(byFile);
-    const filesWithNotes = [...byFile.entries()]
-        .filter(([, arr]) => arr.length > 0)
+    // Build the visible slice up front so front matter and body agree. With
+    // includeResolved=false and an all-resolved workspace, the body would
+    // otherwise be empty while the front matter still claimed notes.
+    const visibleByFile = new Map();
+    for (const [filePath, arr] of byFile) {
+        const visible = includeResolved ? arr : arr.filter((a) => a.status === Statuses.OPEN);
+        if (visible.length > 0) visibleByFile.set(filePath, visible);
+    }
+
+    const tally = totals(visibleByFile);
+    const filesWithNotes = [...visibleByFile.entries()]
         .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }));
 
     const lines = [];
@@ -58,10 +66,8 @@ export function buildReviewMarkdown(byFile, meta = {}) {
     }
 
     for (const [filePath, notes] of filesWithNotes) {
-        const visible = includeResolved ? notes : notes.filter((n) => n.status === Statuses.OPEN);
-        if (visible.length === 0) continue;
-
-        const sorted = sortNotes(visible);
+        // notes here is already the visible slice (filtered above).
+        const sorted = sortNotes(notes);
         lines.push("");
         lines.push(`## File: \`${escapeBackticks(filePath)}\``);
         const title = sorted[0].chapterTitle;
@@ -105,7 +111,32 @@ function renderNote(lines, note, index) {
     lines.push("```text");
     lines.push(stripCodeFences(note.body?.trim() || "(no comment text)"));
     lines.push("```");
+    if (note.because && note.because.trim()) {
+        lines.push(`- **because**:`);
+        lines.push("```text");
+        lines.push(stripCodeFences(note.because.trim()));
+        lines.push("```");
+    }
+    if (note.block && Number.isFinite(note.block.ordinal) && note.block.ordinal >= 1) {
+        lines.push(`- **block**: ${formatBlockRef(note.block)}`);
+    }
+    if (note.status === Statuses.RESOLVED && note.resolvedAt) {
+        const source = note.acceptedSource === "applied" ? "applied" : "manual";
+        lines.push(`- **resolved-at**: ${escapeBackticks(note.resolvedAt)}`);
+        lines.push(`- **accepted-source**: ${source}`);
+    }
+    if (note.passId) {
+        lines.push(`- **pass-id**: \`${escapeBackticks(String(note.passId))}\``);
+    }
     lines.push("");
+}
+
+function formatBlockRef(block) {
+    const chain = Array.isArray(block.headingChain) ? block.headingChain : [];
+    const sectionPart = chain.length > 0
+        ? `section "${chain.map((h) => stripCodeFences(h)).join(" › ")}"`
+        : `section (file root)`;
+    return `${sectionPart} / paragraph ${block.ordinal}`;
 }
 
 function describeAnchor(note) {
@@ -150,13 +181,25 @@ function totals(byFile) {
     return { open, resolved, total };
 }
 
-/** Defang any nested code fences in user-provided text by replacing triple
- *  backticks with three single-quote characters. The original character
- *  count is preserved; the content survives, the fence cannot break out. */
+/** Defang any nested code fences in user-provided text. Replaces every run
+ *  of three or more backticks (```, ````, …) and three or more tildes (~~~,
+ *  ~~~~, …) with the same number of single-quote characters. Length is
+ *  preserved; the content survives; no run of fence characters can break
+ *  out of the wrapping fenced block. */
 function stripCodeFences(s) {
-    return String(s ?? "").replace(/```/g, "'''");
+    return String(s ?? "")
+        .replace(/`{3,}/g, (m) => "'".repeat(m.length))
+        .replace(/~{3,}/g, (m) => "'".repeat(m.length));
 }
 
 function escapeBackticks(s) {
     return String(s ?? "").replace(/`/g, "\\`");
+}
+
+/** ISO 8601 date check, strict `YYYY-MM-DD`. Anything else (empty string,
+ *  Date instance, malformed) falls back to today. Without this guard, an
+ *  empty string would land in both the filename and the front matter,
+ *  silently violating the v1.x schema's `review_date` type. */
+function isValidIsoDate(s) {
+    return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
 }

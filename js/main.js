@@ -12,6 +12,9 @@ import { splitFrontmatter } from "./markdown/frontmatter.js";
 import { writeToolState } from "./lib/toolDir.js";
 import { performReset, consumeResetFlag } from "./lib/reset.js";
 import { NotesDiskPersister } from "./lib/notesPersistence.js";
+import { readAppliedIds, flipAccepted } from "./annotations/appliedRoundtrip.js";
+import { TasteLogger } from "./lib/tasteLog.js";
+import { PassStore } from "./passes/passStore.js";
 
 import { Gate } from "./ui/gate.js";
 import { Chrome } from "./ui/chrome.js";
@@ -23,11 +26,14 @@ import { FilterStrip } from "./ui/filterStrip.js";
 
 const supported = WorkspaceService.isSupported();
 
+const passStore = new PassStore({ workspace, bus });
+
 const deps = {
     bus,
     workspace,
     files,
     annotationStore,
+    passStore,
     exporter: (byFile) => buildReviewMarkdown(byFile),
     openWorkspace,
     runReset: null, // wired below once gate exists
@@ -39,6 +45,7 @@ deps.gate = gate;
 deps.runReset = () => performReset({ workspace, bus, Events, gate });
 
 const notesPersister = new NotesDiskPersister({ workspace, annotationStore, bus });
+const tasteLogger = new TasteLogger({ workspace, bus, annotationStore });
 
 if (!supported) {
     gate.showUnsupported();
@@ -61,6 +68,7 @@ async function bootApp() {
     ];
     components.forEach((c) => c.mount());
     notesPersister.mount();
+    tasteLogger.mount();
 
     bus.on(Events.WORKSPACE_OPENED, onWorkspaceOpened);
     bus.on(Events.FILE_SELECTED, onFileSelected);
@@ -99,6 +107,28 @@ async function onWorkspaceOpened() {
     await notesPersister.hydrate().catch((err) => {
         console.warn("[bookwright] notesPersistence: hydrate failed", err);
     });
+    // Seed the taste logger's status cache before any auto-resolve fires, so
+    // RESOLVE entries record the correct previous status.
+    await tasteLogger.hydrate().catch((err) => {
+        console.warn("[bookwright] tasteLogger: hydrate failed", err);
+    });
+    await passStore.hydrate().catch((err) => {
+        console.warn("[bookwright] passStore: hydrate failed", err);
+    });
+    // Drafter roundtrip: any reviews/*-applied.md files left by a downstream
+    // agent flip matching `open` notes to `resolved` so the reviewer's gutter
+    // reflects the addressed work without manual click-through. Idempotent
+    // on subsequent opens (already-resolved notes are skipped).
+    try {
+        const appliedIds = await readAppliedIds(workspace.handle);
+        const flipped = await flipAccepted(annotationStore, appliedIds);
+        if (flipped > 0) {
+            console.log(`[bookwright] applied roundtrip: auto-resolved ${flipped} note(s)`);
+            bus.emit(Events.TOAST, { message: `${flipped} note(s) auto-resolved from applied.md` });
+        }
+    } catch (err) {
+        console.warn("[bookwright] applied roundtrip failed", err);
+    }
 
     let fileList = [];
     try {

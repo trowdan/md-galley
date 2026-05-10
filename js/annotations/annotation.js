@@ -22,6 +22,18 @@ export const CategoryLabels = Object.freeze({
     keep: "keep",
 });
 
+// Pin: CategoryLabels and Categories must move in lockstep. A rename of a
+// Categories key without the matching label edit would silently change the
+// export label without a REVIEW_SCHEMA_VERSION bump. Verify at module load.
+for (const value of Object.values(Categories)) {
+    if (!(value in CategoryLabels)) {
+        throw new Error(
+            `CategoryLabels missing entry for "${value}". Update both maps in lockstep, ` +
+            `and bump REVIEW_SCHEMA_VERSION if the visible label changes.`
+        );
+    }
+}
+
 export const CATEGORY_ORDER = [
     Categories.PROSE,
     Categories.ACCURACY,
@@ -65,6 +77,9 @@ export class Annotation {
         quote = "",
         category,
         body,
+        because = "",
+        block = null,
+        passId = null,
         priority = Priorities.NORMAL,
     }) {
         const now = new Date().toISOString();
@@ -80,6 +95,9 @@ export class Annotation {
             quote,
             category,
             body,
+            because,
+            block,
+            passId,
             priority,
             status: Statuses.OPEN,
             createdAt: now,
@@ -95,8 +113,23 @@ export class Annotation {
         });
     }
 
-    resolve() { return this.update({ status: Statuses.RESOLVED }); }
-    reopen()  { return this.update({ status: Statuses.OPEN }); }
+    /** Mark resolved. `source` is the acceptance trace: who/what closed
+     *  this note. `'manual'` = a human click in the gutter; `'applied'` = a
+     *  drafter agent's `reviews/*-applied.md` import. */
+    resolve(source = "manual") {
+        return this.update({
+            status: Statuses.RESOLVED,
+            resolvedAt: new Date().toISOString(),
+            acceptedSource: source,
+        });
+    }
+    reopen() {
+        return this.update({
+            status: Statuses.OPEN,
+            resolvedAt: null,
+            acceptedSource: null,
+        });
+    }
 
     toJSON() {
         return { ...this };

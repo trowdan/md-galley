@@ -1,6 +1,9 @@
 // Anchor resolver. Translates a live DOM Selection into the persistent
 // fields stored on an annotation: source line range, nearest preceding
-// heading (for context), the verbatim quoted text, and a viewport rect.
+// heading (for context), the verbatim quoted text, a block-level fallback
+// reference (heading chain + ordinal), and a viewport rect.
+
+import { captureBlockRef } from "./blockAnchor.js";
 
 const HEADING_TAGS = new Set(["H1", "H2", "H3", "H4", "H5", "H6"]);
 
@@ -34,6 +37,7 @@ export function resolveAnchored(selection, textRoot) {
         lineEnd: Math.max(lineStart, lineEnd),
         quote,
         heading: findPrecedingHeading(startBlock, textRoot),
+        block: captureBlockRef(startBlock, textRoot),
         rect: range.getBoundingClientRect(),
         anchorEl: startBlock,
     };

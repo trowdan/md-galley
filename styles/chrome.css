@@ -214,4 +214,32 @@
     border-bottom-color: var(--mark);
 }
 
+/* Pass chip (named-pass scope). Lives at the right of the filter strip,
+ * separated by a thin dot. Two states: `none` (offers + pass / resume) and
+ * `active` (shows the pass name with × end and switch actions). */
+.filter-strip__sep {
+    color: var(--ink-thin);
+    margin: 0 0.6ch;
+}
+.filter-strip__pass {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.6ch;
+}
+.filter-strip__pass-label {
+    color: var(--ink);
+}
+.filter-strip__pass-action {
+    color: var(--ink-3);
+    border-bottom: 2px solid transparent;
+    padding: 0 0 0.15em;
+    transition: color 140ms ease-out, border-color 140ms ease-out;
+}
+.filter-strip__pass-action:hover {
+    color: var(--ink);
+}
+.filter-strip__pass[data-state="active"] .filter-strip__pass-action[data-pass-action="end"]:hover {
+    color: var(--mark);
+}
+
 [data-rail="true"] .filter-strip { padding-left: 240px; }

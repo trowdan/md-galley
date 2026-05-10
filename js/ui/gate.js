@@ -54,10 +54,9 @@ export class Gate extends Component {
                 your notes anchored to the same files.
             `;
         } else {
-            title = "Reviewing a draft shouldn&rsquo;t break your reading.";
+            title = "Human-review your Markdown drafts, then hand the AI a report.";
             body = `
-                Read a chapter end to end. Leave <em>anchored</em> notes in the margin.
-                <em>Export</em> one Markdown review. Files stay <em>local</em>.
+                Read a chapter, leave <em>anchored</em> notes, and <em>export</em> one Markdown review for the next AI pass. Everything runs <em>in your browser</em>. no backend, no upload, no file ever leaves your machine.
             `;
         }
 

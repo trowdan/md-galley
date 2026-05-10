@@ -66,6 +66,71 @@
     display: block;
 }
 
+/* Optional rationale ("because"), shown only when the note has one. Sits
+ * between body and actions; visually quieter than body, distinct from meta. */
+.note__because {
+    margin: 0.4em 0 0;
+    color: var(--ink-2);
+    font-style: italic;
+    word-break: break-word;
+    white-space: pre-wrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.note[data-expanded="true"] .note__because {
+    -webkit-line-clamp: unset;
+    display: block;
+}
+.note__because-tag {
+    color: var(--ink-3);
+    font-style: normal;
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+    margin-right: 0.3ch;
+}
+.note[data-status="resolved"] .note__because { display: none; }
+
+/* Acceptance trace. Rendered on resolved notes only; visible when filter is
+ * resolved/all. The 'applied' source is dimmed differently to signal the
+ * close came from a drafter roundtrip rather than a manual click. */
+.note__trace {
+    margin: 0.4em 0 0;
+    color: var(--ink-3);
+    font-style: italic;
+    font-size: var(--t-meta);
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+}
+
+/* Anchor-state styling.
+ *  quote  -- default; mark.hl is in the prose, gutter aligns to it.
+ *  block  -- the original quote no longer matches; the gutter card aligns to
+ *            the top of the block the note was created in. Slightly dimmed
+ *            border to signal "no exact passage".
+ *  orphan -- block also missing or ambiguous. Visible badge, dimmed body. */
+.note[data-anchor-state="block"] {
+    border-left-style: dashed;
+    border-left-color: color-mix(in oklch, var(--cat, var(--ink-thin)) 70%, transparent);
+}
+.note[data-anchor-state="orphan"] {
+    border-left-style: dotted;
+    border-left-color: var(--ink-3);
+    color: color-mix(in oklch, var(--ink) 55%, transparent);
+}
+.note__orphan-badge {
+    margin-left: auto;
+    color: var(--ink-3);
+    font-style: italic;
+    font-size: var(--t-meta);
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    padding: 0 0.4ch;
+    border: 1px solid var(--ink-thin);
+    border-radius: 2px;
+}
+
 .note__actions {
     display: none;
     gap: 1ch;
@@ -130,6 +195,43 @@
 }
 .composer__body:focus { outline: 0; }
 .composer__body::placeholder { color: var(--ink-3); }
+
+/* Optional rationale disclosure. Collapsed by default to keep the composer
+ * compact; auto-expanded in edit mode when the persisted note already has
+ * a rationale (the `open` attribute is set in renderComposer). */
+.composer__because-disclosure {
+    margin-top: 0.4em;
+    font-size: var(--t-meta);
+    color: var(--ink-3);
+}
+.composer__because-disclosure summary {
+    cursor: pointer;
+    list-style: none;
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+    color: var(--ink-3);
+    padding: 0.15em 0;
+}
+.composer__because-disclosure summary:hover { color: var(--ink-2); }
+.composer__because-disclosure summary::-webkit-details-marker { display: none; }
+.composer__because-disclosure[open] summary { color: var(--ink-2); }
+.composer__because {
+    width: 100%;
+    margin-top: 0.3em;
+    min-height: calc(var(--line) * 2);
+    border: 0;
+    background: transparent;
+    resize: vertical;
+    color: inherit;
+    font-family: inherit;
+    font-size: var(--t-margin);
+    font-style: italic;
+    line-height: 1.42;
+    caret-color: var(--mark);
+    padding: 0;
+}
+.composer__because:focus { outline: 0; }
+.composer__because::placeholder { color: var(--ink-3); font-style: italic; }
 
 .composer__cats {
     display: flex;

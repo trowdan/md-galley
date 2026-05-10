@@ -59,7 +59,18 @@ export class AnnotationStore {
         const list = await this.listFor(filePath);
         const found = list.find((a) => a.id === id);
         if (!found) return null;
-        const next = found.status === Statuses.RESOLVED ? found.reopen() : found.resolve();
+        const next = found.status === Statuses.RESOLVED ? found.reopen() : found.resolve("manual");
+        return this.update(next);
+    }
+
+    /** Drafter-roundtrip path: resolve with source="applied" so the trace
+     *  records that an agent (not the human) closed this note. No-ops when
+     *  the note is already resolved. */
+    async acceptApplied(filePath, id) {
+        const list = await this.listFor(filePath);
+        const found = list.find((a) => a.id === id);
+        if (!found || found.status === Statuses.RESOLVED) return null;
+        const next = found.resolve("applied");
         return this.update(next);
     }
 

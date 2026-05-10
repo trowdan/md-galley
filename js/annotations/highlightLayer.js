@@ -2,18 +2,47 @@
 // manuscript, scoped to the block whose source line range overlaps the
 // annotation. Renders only anchored-scope notes; section/chapter scopes
 // have no inline mark.
+//
+// On reload, the source on disk may have changed and the verbatim quote may
+// no longer match. When that happens, we fall back to a block-level anchor:
+// the (headingChain, ordinal) snapshot captured at note creation. The result
+// is reported back as a resolution map so the gutter can re-position the
+// note's card on its (now changed) paragraph or flag it as orphan.
+//
 // Pattern: pure DOM mutation. No event emission.
+
+import { findBlockByRef } from "./blockAnchor.js";
 
 const NORMALISE_RE = /\s+/g;
 
-/** Apply all anchored annotations as <mark.hl> tags. Idempotent. */
+/** Apply all anchored annotations as <mark.hl> tags. Idempotent.
+ *  @returns {Map<string, { state: 'quote'|'block'|'orphan', blockEl: HTMLElement|null }>} */
 export function applyHighlights(textRoot, annotations) {
     clearHighlights(textRoot);
-    const anchored = annotations.filter((a) => a.scope === "anchored" && a.quote);
+    const states = new Map();
+    const anchored = annotations.filter((a) => a.scope === "anchored");
     for (const ann of anchored) {
-        try { wrapQuote(textRoot, ann); }
-        catch (err) { console.warn("highlightLayer: anchor failed", ann.id, err); }
+        let placed = false;
+        if (ann.quote) {
+            try { placed = wrapQuote(textRoot, ann); }
+            catch (err) { console.warn("highlightLayer: anchor failed", ann.id, err); }
+        }
+        if (placed) {
+            states.set(ann.id, { state: "quote", blockEl: null });
+            continue;
+        }
+        if (ann.block) {
+            const { blockEl, state } = findBlockByRef(textRoot, ann.block);
+            if (state === "found" && blockEl) {
+                states.set(ann.id, { state: "block", blockEl });
+                continue;
+            }
+            states.set(ann.id, { state: "orphan", blockEl: null });
+            continue;
+        }
+        states.set(ann.id, { state: "orphan", blockEl: null });
     }
+    return states;
 }
 
 export function clearHighlights(textRoot) {
@@ -76,15 +105,13 @@ export function updateDraftCategory(textRoot, category) {
 
 function wrapQuote(textRoot, ann) {
     const blocks = blocksInRange(textRoot, ann.lineStart, ann.lineEnd);
-    if (blocks.length === 0) return;
-
     const needle = ann.quote.replace(NORMALISE_RE, " ").trim();
-    if (!needle) return;
+    if (!needle) return false;
 
     for (const block of blocks) {
-        if (tryWrapInside(block, needle, ann)) return;
+        if (tryWrapInside(block, needle, ann)) return true;
     }
-    tryWrapInside(textRoot, needle, ann);
+    return tryWrapInside(textRoot, needle, ann);
 }
 
 function blocksInRange(root, lineStart, lineEnd) {

@@ -79,7 +79,8 @@ export class Manuscript extends Component {
     async refreshFromStore() {
         if (!this.currentFile) return;
         this.currentAnnotations = await this.deps.annotationStore.listFor(this.currentFile.filePath);
-        applyHighlights(this.textEl, this.currentAnnotations);
+        const states = applyHighlights(this.textEl, this.currentAnnotations);
+        this.deps.bus.emit(Events.ANCHOR_STATES_RESOLVED, { states });
         this.deps.bus.emit(Events.LAYOUT_REFLOW, null);
     }
 

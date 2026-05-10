@@ -34,6 +34,8 @@ export class Marginalia extends Component {
         this.composerOpen = null; // { context, scope, anchorEl }
         this.editingId = null;
         this.scheduledLayout = null;
+        this.anchorStates = new Map(); // id -> { state, blockEl }
+        this.activePassId = null;
     }
 
     mount() {
@@ -42,6 +44,8 @@ export class Marginalia extends Component {
         this.listen(Events.ANNOTATION_UPDATED, this.refresh);
         this.listen(Events.ANNOTATION_DELETED, this.refresh);
         this.listen(Events.LAYOUT_REFLOW, this.scheduleLayout);
+        this.listen(Events.ANCHOR_STATES_RESOLVED, this.onAnchorStatesResolved);
+        this.listen(Events.PASS_CHANGED, this.onPassChanged);
         this.listen(Events.FILTER_CHANGED, this.onFilterChanged);
         this.listen(Events.COMPOSER_OPEN, this.onComposerOpen);
         this.listen(Events.COMPOSER_CLOSE, this.closeComposer);
@@ -85,17 +89,34 @@ export class Marginalia extends Component {
         if (!this.composerOpen) return;
         const ta = this.gutterEl.querySelector(".composer__body");
         const body = ta?.value.trim() ?? "";
+        const becauseTa = this.gutterEl.querySelector(".composer__because");
+        const because = becauseTa?.value.trim() ?? "";
         const c = this.composerOpen;
 
         if (c.editingId) {
-            // Edit mode: patch in place. Updates body and category; the
-            // anchor stays attached to whatever passage the original note
-            // referenced.
-            await this.deps.annotationStore.patch(this.currentFile, c.editingId, {
+            // Edit mode: patch in place. Always updates body, because, and
+            // category. If the reviewer reselected a different passage during
+            // this edit session (anchorReanchored is set in onComposerOpen),
+            // also patch the anchor fields so the note jumps to the new
+            // passage on next applyHighlights.
+            const patch = {
                 body,
+                because,
                 category: c.selectedCategory,
+            };
+            if (c.anchorReanchored && c.anchor) {
+                patch.lineStart = c.anchor.lineStart ?? null;
+                patch.lineEnd = c.anchor.lineEnd ?? null;
+                patch.quote = c.anchor.quote ?? "";
+                patch.heading = c.anchor.heading ?? null;
+                patch.sectionAnchor = c.anchor.sectionAnchor ?? null;
+                patch.block = c.anchor.block ?? null;
+                patch.scope = c.scope ?? "anchored";
+            }
+            await this.deps.annotationStore.patch(this.currentFile, c.editingId, patch);
+            this.deps.bus.emit(Events.TOAST, {
+                message: c.anchorReanchored ? "note re-anchored" : "note updated",
             });
-            this.deps.bus.emit(Events.TOAST, { message: "note updated" });
         } else {
             const ann = Annotation.create({
                 filePath: c.filePath,
@@ -108,6 +129,9 @@ export class Marginalia extends Component {
                 quote: c.anchor?.quote ?? "",
                 category: c.selectedCategory,
                 body,
+                because,
+                block: c.anchor?.block ?? null,
+                passId: this.deps.passStore?.getActive()?.id ?? null,
             });
             // Clear the draft before persisting; refreshFromStore in
             // Manuscript will run applyHighlights and lay down the
@@ -147,6 +171,16 @@ export class Marginalia extends Component {
         this.render();
     }
 
+    onAnchorStatesResolved({ states }) {
+        this.anchorStates = states ?? new Map();
+        this.render();
+    }
+
+    onPassChanged({ active }) {
+        this.activePassId = active?.id ?? null;
+        this.render();
+    }
+
     render() {
         const visible = this.annotations.filter((a) => this.passesFilter(a));
         this.gutterEl.innerHTML = "";
@@ -170,6 +204,13 @@ export class Marginalia extends Component {
     }
 
     passesFilter(ann) {
+        // Status filter (open/resolved/all) composes with the active pass:
+        // when a pass is active, hide notes that belong to a different
+        // pass. Notes with no passId always pass the pass-scope filter so
+        // legacy notes do not vanish when the reviewer declares a pass.
+        if (this.activePassId && ann.passId && ann.passId !== this.activePassId) {
+            return false;
+        }
         if (this.activeFilter === "all") return true;
         if (this.activeFilter === "open") return ann.status === Statuses.OPEN;
         if (this.activeFilter === "resolved") return ann.status === Statuses.RESOLVED;
@@ -178,11 +219,16 @@ export class Marginalia extends Component {
 
     onComposerOpen(payload) {
         // Re-anchor support: if a composer is already open, capture the
-        // typed body and the chosen category so the reviewer does not lose
-        // their work when they highlight a different passage.
+        // typed body, the chosen category, and (when editing an existing
+        // note) the editingId so the reviewer does not lose their work or
+        // their edit context when they highlight a different passage.
         const wasOpen = !!this.composerOpen;
+        const previousEditingId = wasOpen ? this.composerOpen.editingId ?? null : null;
         const previousBody = wasOpen
             ? (this.gutterEl.querySelector(".composer__body")?.value ?? "")
+            : "";
+        const previousBecause = wasOpen
+            ? (this.gutterEl.querySelector(".composer__because")?.value ?? "")
             : "";
         const previousCategory = wasOpen
             ? this.composerOpen.selectedCategory
@@ -194,8 +240,14 @@ export class Marginalia extends Component {
             filePath: payload.filePath,
             chapterTitle: payload.chapterTitle,
             selectedCategory: previousCategory,
+            preloadBecause: !!previousBecause.trim(),
+            // In-edit re-anchor: keep the editingId so the next save patches
+            // the existing note instead of creating a new one. The fresh
+            // anchor will overwrite the note's quote/lineStart/lineEnd/block.
+            editingId: previousEditingId,
+            anchorReanchored: !!previousEditingId,
         };
-        this.editingId = null;
+        this.editingId = previousEditingId;
         // Always wipe the previous draft mark; we will paint a fresh one for
         // the new anchor below.
         clearDraftMark(this.textEl);
@@ -207,6 +259,10 @@ export class Marginalia extends Component {
         if (previousBody) {
             const ta = this.gutterEl.querySelector(".composer__body");
             if (ta) ta.value = previousBody;
+        }
+        if (previousBecause) {
+            const becauseTa = this.gutterEl.querySelector(".composer__because");
+            if (becauseTa) becauseTa.value = previousBecause;
         }
         // Run layout synchronously so the composer is positioned beside the
         // selection BEFORE focus, then focus without letting the browser scroll
@@ -304,6 +360,7 @@ export class Marginalia extends Component {
             filePath: ann.filePath,
             chapterTitle: ann.chapterTitle,
             selectedCategory: ann.category,
+            preloadBecause: !!(ann.because && ann.because.trim()),
         };
         this.editingId = id;
 
@@ -315,6 +372,8 @@ export class Marginalia extends Component {
 
         const ta = this.gutterEl.querySelector(".composer__body");
         if (ta) ta.value = ann.body ?? "";
+        const becauseTa = this.gutterEl.querySelector(".composer__because");
+        if (becauseTa) becauseTa.value = ann.because ?? "";
 
         this.layout();
         queueMicrotask(() => {
@@ -371,15 +430,45 @@ export class Marginalia extends Component {
         el.dataset.scope = ann.scope;
         el.dataset.status = ann.status;
 
+        // Anchor resolution state from the highlight layer (quote / block /
+        // orphan). For section/chapter scopes, anchor state is irrelevant; we
+        // leave it unset and the gutter aligns by other means.
+        const resolution = this.anchorStates.get(ann.id);
+        if (resolution) {
+            el.dataset.anchorState = resolution.state;
+            if (resolution.state === "block" && resolution.blockEl) {
+                const lineStart = resolution.blockEl.dataset.lineStart;
+                if (lineStart) el.dataset.blockLineStart = lineStart;
+            }
+        }
+
         const anchorText = describeAnchor(ann);
         const cat = CAT_LABELS[ann.category] ?? ann.category;
+
+        const becauseHtml = ann.because && ann.because.trim()
+            ? `<p class="note__because"><span class="note__because-tag">because</span> ${escape(ann.because)}</p>`
+            : "";
+
+        const orphanBadge = resolution?.state === "orphan"
+            ? `<span class="note__orphan-badge">orphan</span>`
+            : "";
+
+        // Acceptance trace: when a note is resolved, render a small italic
+        // line recording when it closed and how (manual click or applied.md
+        // roundtrip from a drafter agent). This survives across reloads.
+        const traceHtml = ann.status === "resolved" && ann.resolvedAt
+            ? `<p class="note__trace">${escape(ann.acceptedSource === "applied" ? "applied" : "resolved")} ${escape(formatTraceDate(ann.resolvedAt))}</p>`
+            : "";
 
         el.innerHTML = `
             <p class="note__meta">
                 <span class="note__meta-anchor">${escape(anchorText)}</span>
                 <span class="note__meta-cat">· ${escape(cat)}</span>
+                ${orphanBadge}
             </p>
             <p class="note__body">${escape(ann.body || "(no comment)")}</p>
+            ${becauseHtml}
+            ${traceHtml}
             <div class="note__actions">
                 <button data-action="resolve">${ann.status === "resolved" ? "reopen" : "resolve"}</button>
                 <button data-action="edit">edit</button>
@@ -393,6 +482,9 @@ export class Marginalia extends Component {
         const c = this.composerOpen;
         const verb = c.editingId ? "editing" : "new note";
         const meta = `${describeAnchor({ ...c.anchor, scope: "anchored" })} · ${verb}`;
+        // Auto-expand the rationale disclosure on edit when the persisted
+        // note already has a non-empty `because`. New notes start collapsed.
+        const becauseOpen = !!(c.editingId && c.preloadBecause);
 
         const form = document.createElement("form");
         form.className = "composer";
@@ -400,6 +492,11 @@ export class Marginalia extends Component {
             <p class="composer__meta">${escape(meta)}</p>
             <textarea class="composer__body" rows="3"
                       placeholder="What about this passage? (1–7 to categorise. ⌘↵ to save.)"></textarea>
+            <details class="composer__because-disclosure"${becauseOpen ? " open" : ""}>
+                <summary>+ rationale (optional)</summary>
+                <textarea class="composer__because" rows="2"
+                          placeholder="Why this note? (citation, style rule, prior note, etc.)"></textarea>
+            </details>
             <div class="composer__cats" role="radiogroup" aria-label="Category">
                 ${CATEGORY_ORDER.map((cat, i) => `
                     <button type="button" data-cat="${cat}"
@@ -442,11 +539,22 @@ function anchorTopFor(el, textRoot, composerCtx) {
         return anchorEl.getBoundingClientRect().top;
     }
 
-    // Anchored note: position next to the highlight that matches its id.
+    // Quote-anchored note: position next to the highlight that matches its id.
     if (id) {
         const mark = textRoot.querySelector(`mark.hl[data-annotation-id="${CSS.escape(id)}"]`);
         if (mark) return mark.getBoundingClientRect().top;
     }
+
+    // Block-anchored note: align to the top of the resolved block (no mark.hl
+    // exists in this state). The block's source-line start was stamped on the
+    // note element when the resolution map arrived.
+    const blockLineStart = el.dataset.blockLineStart;
+    if (blockLineStart) {
+        const block = textRoot.querySelector(`.block[data-line-start="${CSS.escape(blockLineStart)}"]`);
+        if (block) return block.getBoundingClientRect().top;
+    }
+
+    // Orphan or unknown: stay at the top of the gutter so it is visible.
     return 0;
 }
 
@@ -457,6 +565,14 @@ function describeAnchor(ann) {
             : `L${ann.lineStart}-${ann.lineEnd}`;
     }
     return "·";
+}
+
+function formatTraceDate(iso) {
+    // Render the resolved-at as just the date (YYYY-MM-DD) for the gutter;
+    // the full ISO timestamp is preserved on the annotation and in exports.
+    if (typeof iso !== "string") return "";
+    const m = iso.match(/^(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : iso;
 }
 
 function escape(s) {
