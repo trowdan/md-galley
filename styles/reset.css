@@ -2,8 +2,15 @@
  * stomping their margins from the cascade. */
 
 *, *::before, *::after { box-sizing: border-box; }
-html, body { height: 100%; }
+/* No fixed `height: 100%` on html/body. With it, body's containing block is
+ * one viewport tall, which bounds `position: sticky` ranges — chrome and the
+ * filter strip would scroll off after the first viewport instead of staying
+ * pinned. Letting body's height be content-driven keeps the sticky range as
+ * the full document. `min-height: 100%` on html keeps short pages filling the
+ * viewport (so the paper background still covers everything). The gate uses
+ * `position: fixed; inset: 0` already, so it doesn't depend on body height. */
 html {
+    min-height: 100%;
     background: var(--paper);
     color: var(--ink);
 }
