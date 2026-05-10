@@ -6,7 +6,7 @@
 import { Component } from "../lib/component.js";
 import { Events } from "../lib/eventBus.js";
 
-const THEME_KEY = "bookwright:theme";
+const THEME_KEY = "mdgalley:theme";
 
 export class Chrome extends Component {
     constructor(rootEl, deps) {
@@ -45,7 +45,7 @@ export class Chrome extends Component {
     onFileLoaded({ chapterTitle, filePath }) {
         const filename = filePath?.split("/").pop() ?? "";
         this.fileEl.textContent = filename || "no file open";
-        document.title = chapterTitle ? `${chapterTitle} · Bookwright` : "Bookwright";
+        document.title = chapterTitle ? `${chapterTitle} · MDGalley` : "MDGalley";
     }
 
     onWorkspaceCleared() {
@@ -84,6 +84,23 @@ export class Chrome extends Component {
         ev.stopPropagation();
         this.closeSettings();
         if (btn.dataset.action === "reset") this.deps.runReset();
+        else if (btn.dataset.action === "continuous") this.toggleContinuous();
+    }
+
+    /** Flip continuous mode (manuscript-across-files) and reload. The flag
+     *  is read at workspace-open time, so a reload is the cheapest way to
+     *  rebuild the rendered DOM without a runtime mode-switch path. */
+    toggleContinuous() {
+        let next = true;
+        try {
+            const cur = localStorage.getItem("mdgalley:continuous") === "true";
+            next = !cur;
+            localStorage.setItem("mdgalley:continuous", String(next));
+        } catch {}
+        this.deps.bus.emit(Events.TOAST, {
+            message: next ? "manuscript-across-files: ON (reloading)" : "single-file mode: ON (reloading)",
+        });
+        setTimeout(() => window.location.reload(), 250);
     }
 
     toggleTheme() {

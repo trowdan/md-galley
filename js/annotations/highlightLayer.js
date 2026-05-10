@@ -16,15 +16,27 @@ import { findBlockByRef } from "./blockAnchor.js";
 const NORMALISE_RE = /\s+/g;
 
 /** Apply all anchored annotations as <mark.hl> tags. Idempotent.
+ *  In continuous (workspace-as-one-text) mode, each note's search is scoped
+ *  to its own `<section data-file-path="…">`, so identical lines across
+ *  files cannot cross-anchor. In single-file mode, the textRoot is the
+ *  scope for every note.
  *  @returns {Map<string, { state: 'quote'|'block'|'orphan', blockEl: HTMLElement|null }>} */
 export function applyHighlights(textRoot, annotations) {
     clearHighlights(textRoot);
     const states = new Map();
     const anchored = annotations.filter((a) => a.scope === "anchored");
     for (const ann of anchored) {
+        const scope = scopeFor(textRoot, ann);
+        if (!scope) {
+            // Continuous mode and the file segment for this note is not in
+            // the rendered DOM (file removed from the workspace, etc.) -- no
+            // way to anchor it. Mark orphan and move on.
+            states.set(ann.id, { state: "orphan", blockEl: null });
+            continue;
+        }
         let placed = false;
         if (ann.quote) {
-            try { placed = wrapQuote(textRoot, ann); }
+            try { placed = wrapQuote(scope, ann); }
             catch (err) { console.warn("highlightLayer: anchor failed", ann.id, err); }
         }
         if (placed) {
@@ -32,7 +44,7 @@ export function applyHighlights(textRoot, annotations) {
             continue;
         }
         if (ann.block) {
-            const { blockEl, state } = findBlockByRef(textRoot, ann.block);
+            const { blockEl, state } = findBlockByRef(scope, ann.block);
             if (state === "found" && blockEl) {
                 states.set(ann.id, { state: "block", blockEl });
                 continue;
@@ -43,6 +55,15 @@ export function applyHighlights(textRoot, annotations) {
         states.set(ann.id, { state: "orphan", blockEl: null });
     }
     return states;
+}
+
+function scopeFor(textRoot, ann) {
+    // If the textRoot already represents one file (single-file mode), return
+    // it directly. Otherwise, find the segment whose data-file-path matches
+    // the note. Falls back to textRoot when filePath is missing (legacy).
+    if (!ann.filePath) return textRoot;
+    const segment = textRoot.querySelector(`[data-file-path="${CSS.escape(ann.filePath)}"]`);
+    return segment ?? textRoot;
 }
 
 export function clearHighlights(textRoot) {

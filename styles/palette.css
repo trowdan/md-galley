@@ -126,6 +126,158 @@
     font-size: inherit;
 }
 
+/* Pass dialog. Modal that consolidates every pass action: end / resume /
+ * switch / forget / start a new pass. Same dialog aesthetic as the palette
+ * (typeset, no shadows, ink palette) but content-shaped, not list-shaped. */
+.pass-dialog[open] {
+    position: fixed;
+    inset: 12vh auto auto 50%;
+    transform: translateX(-50%);
+    width: min(520px, 92vw);
+    max-height: 76vh;
+    background: var(--paper);
+    border: 1px solid var(--ink-thin);
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    color: var(--ink);
+    font-family: var(--font-chrome);
+    font-size: var(--t-chrome);
+    overflow: hidden;
+    z-index: 50;
+}
+.pass-dialog::backdrop {
+    background: color-mix(in oklch, var(--paper) 60%, transparent);
+    backdrop-filter: none;
+}
+.pass-dialog__inner {
+    display: flex;
+    flex-direction: column;
+    max-height: 76vh;
+    overflow: auto;
+    padding: var(--line);
+    gap: var(--line);
+}
+.pass-dialog__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1ch;
+    border-bottom: 1px solid var(--ink-thin);
+    padding-bottom: 0.6em;
+}
+.pass-dialog__title {
+    margin: 0;
+    font-family: var(--font-prose);
+    font-size: var(--t-h3);
+    color: var(--ink);
+}
+.pass-dialog__close {
+    border: 0;
+    background: transparent;
+    color: var(--ink-3);
+    font-size: 1.4em;
+    line-height: 1;
+    padding: 0 0.2ch;
+    cursor: pointer;
+}
+.pass-dialog__close:hover { color: var(--ink); }
+
+.pass-dialog__intro {
+    margin: 0;
+    color: var(--ink-2);
+    font-family: var(--font-prose);
+    font-size: var(--t-prose);
+    line-height: 1.5;
+}
+.pass-dialog__h3 {
+    margin: 0 0 0.6em;
+    color: var(--ink-3);
+    font-family: var(--font-margin);
+    font-size: var(--t-meta);
+    text-transform: lowercase;
+    letter-spacing: 0.06em;
+    font-weight: 400;
+}
+
+.pass-dialog__active-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1ch;
+    padding: 0.4em 0;
+    border-bottom: 1px solid var(--ink-thin);
+}
+.pass-dialog__active-name {
+    color: var(--ink);
+    font-weight: 500;
+}
+
+.pass-dialog__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+.pass-dialog__item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    column-gap: 1ch;
+    align-items: baseline;
+    padding: 0.5em 0;
+    border-bottom: 1px solid var(--ink-thin);
+}
+.pass-dialog__item:last-child { border-bottom: 0; }
+.pass-dialog__item-name { color: var(--ink); }
+.pass-dialog__item-meta {
+    grid-column: 1 / 2;
+    grid-row: 2;
+    color: var(--ink-3);
+    font-size: var(--t-meta);
+}
+
+.pass-dialog__create {
+    display: flex;
+    gap: 1ch;
+    align-items: baseline;
+}
+.pass-dialog__input {
+    flex: 1;
+    border: 0;
+    border-bottom: 1px solid var(--ink-thin);
+    padding: 0.3em 0;
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--font-prose);
+    font-size: var(--t-prose);
+    caret-color: var(--mark);
+}
+.pass-dialog__input:focus {
+    outline: 0;
+    border-bottom-color: var(--mark);
+}
+.pass-dialog__input::placeholder { color: var(--ink-3); font-style: italic; }
+
+.pass-dialog__action {
+    color: var(--ink-3);
+    border: 0;
+    background: transparent;
+    padding: 0.2em 0.6ch;
+    font-family: inherit;
+    font-size: inherit;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 140ms ease-out, border-color 140ms ease-out;
+}
+.pass-dialog__action:hover { color: var(--ink); }
+.pass-dialog__action--primary {
+    color: var(--ink);
+    border-bottom-color: var(--mark);
+}
+.pass-dialog__action--end:hover { color: var(--mark); }
+.pass-dialog__action--danger:hover { color: var(--mark); }
+
 /* Pinned-rail mode: a 240 px left rail. Triggered by data-mode="rail" on body. */
 [data-rail="true"] .palette[open] {
     position: fixed;

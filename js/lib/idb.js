@@ -2,7 +2,7 @@
 // Why not localStorage: directory handles must be cloned via structuredClone, which
 // IndexedDB supports natively and localStorage does not.
 
-const DB_NAME = "bookwright";
+const DB_NAME = "mdgalley";
 const DB_VERSION = 1;
 const STORES = ["workspace", "annotations"];
 

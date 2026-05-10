@@ -58,6 +58,40 @@
 
 .manuscript__body { margin: 0; }
 
+/* Continuous mode: workspace-as-one-text. Each file becomes a `.file-segment`
+ * preceded by a thin boundary header (kicker + path + title). The boundary
+ * is muted so it reads as architecture, not content. */
+.manuscript__body--continuous .file-segment + .file-segment {
+    margin-top: 4em;
+}
+.file-segment__head {
+    margin: 2em 0 1em;
+    padding-bottom: 0.6em;
+    border-bottom: 1px solid var(--ink-thin);
+}
+.manuscript__body--continuous > .file-segment:first-child .file-segment__head {
+    margin-top: 0;
+}
+.file-segment__kicker {
+    display: inline-block;
+    color: var(--ink-3);
+    font-family: var(--font-margin);
+    font-size: var(--t-meta);
+    text-transform: lowercase;
+    letter-spacing: 0.06em;
+    margin-right: 0.8ch;
+}
+.file-segment__path {
+    color: var(--ink-2);
+    font-family: var(--font-margin);
+    font-size: var(--t-meta);
+}
+.file-segment__title {
+    margin: 0.3em 0 0;
+    line-height: 1.2;
+    color: var(--ink);
+}
+
 .manuscript__body p,
 .manuscript__body ul,
 .manuscript__body ol,

@@ -6,7 +6,7 @@
 import { Component } from "../lib/component.js";
 import { Events } from "../lib/eventBus.js";
 
-const FILTER_KEY = "bookwright:filter";
+const FILTER_KEY = "mdgalley:filter";
 const VALID = new Set(["open", "resolved", "all"]);
 
 export class FilterStrip extends Component {
@@ -50,48 +50,28 @@ export class FilterStrip extends Component {
         this.renderPass();
     }
 
+    /** The chip is a single button. Active = shows the pass name, click
+     *  opens the dialog (which includes "end" + switch + create + delete
+     *  actions). Inactive = `+ pass`, click opens the same dialog focused
+     *  on the create input (or showing inactive passes for resume). All
+     *  flows go through PassDialog; no prompt()/alert() in this component. */
     renderPass() {
         if (!this.passEl) return;
+        const label = this.passEl.querySelector(".filter-strip__pass-chip-label");
         if (this.activePass) {
             this.passEl.dataset.state = "active";
-            this.passEl.innerHTML = `
-                <span class="filter-strip__pass-label">pass: ${escape(this.activePass.name)}</span>
-                <button type="button" class="filter-strip__pass-action" data-pass-action="end" title="End the active pass (notes are kept)">×</button>
-                <button type="button" class="filter-strip__pass-action" data-pass-action="switch" title="Switch to a different pass">switch</button>
-            `;
+            this.passEl.title = `Active pass: ${this.activePass.name}. Click to switch, end, or start another.`;
+            if (label) label.textContent = `pass: ${this.activePass.name}`;
         } else {
             this.passEl.dataset.state = "none";
-            this.passEl.innerHTML = `
-                <button type="button" class="filter-strip__pass-action" data-pass-action="start">+ pass</button>
-                <button type="button" class="filter-strip__pass-action" data-pass-action="resume" title="Resume an earlier pass">resume</button>
-            `;
+            this.passEl.title = "Start or resume a named pass.";
+            if (label) label.textContent = "+ pass";
         }
     }
 
-    async onPassClick(ev) {
-        const btn = ev.target.closest("[data-pass-action]");
-        if (!btn) return;
-        const action = btn.dataset.passAction;
-        const passStore = this.deps.passStore;
-        if (!passStore) return;
-        if (action === "start" || action === "switch") {
-            const name = window.prompt(action === "start" ? "Pass name:" : "Switch to pass (name):", "");
-            if (!name || !name.trim()) return;
-            await passStore.start(name.trim());
-        } else if (action === "end") {
-            await passStore.end();
-        } else if (action === "resume") {
-            const list = passStore.list();
-            if (list.length === 0) {
-                window.alert("No earlier passes to resume.");
-                return;
-            }
-            const lines = list.map((p, i) => `${i + 1}. ${p.name}`).join("\n");
-            const choice = window.prompt(`Resume which pass?\n${lines}`, "1");
-            const idx = Number.parseInt(choice ?? "", 10);
-            const pick = list[idx - 1];
-            if (pick) await passStore.activate(pick.id);
-        }
+    onPassClick(ev) {
+        ev.preventDefault();
+        this.deps.bus.emit(Events.PASS_DIALOG_OPEN);
     }
 
     applyStored() {

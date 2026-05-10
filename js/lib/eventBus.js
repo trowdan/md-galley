@@ -45,6 +45,12 @@ export const Events = Object.freeze({
     ANCHOR_STATES_RESOLVED: "anchor:states-resolved",
 
     PASS_CHANGED: "pass:changed",
+    PASS_DIALOG_OPEN: "pass:dialog-open",
+    PASS_DIALOG_CLOSE: "pass:dialog-close",
+
+    WORKSPACE_RENDERED: "workspace:rendered",
+    FILE_FOCUSED: "file:focused",
+    MODE_CHANGED: "mode:changed",
 
     FILTER_CHANGED: "filter:changed",
     THEME_CHANGED: "theme:changed",

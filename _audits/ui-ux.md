@@ -1,4 +1,4 @@
-# UI/UX audit: Bookwright
+# UI/UX audit: MDGalley
 
 ## Verdict
 
@@ -147,7 +147,7 @@ The handle's name comes from `handle.name`. Show it.
 ```html
 <div class="reader__placeholder">
     <h2>No .md files in this folder</h2>
-    <p>Bookwright reads Markdown chapters. Try a folder like <code>chapters/</code>.</p>
+    <p>MDGalley reads Markdown chapters. Try a folder like <code>chapters/</code>.</p>
     <button class="ghost-button">Pick a different folder</button>
 </div>
 ```
@@ -165,7 +165,7 @@ The handle's name comes from `handle.name`. Show it.
 ### [major] App bar lacks the chapter title or current file name
 
 **Where:** `index.html:36-39`, `js/ui/toolbar.js:52-56`
-**Issue:** The bar shows the brand ("Bookwright"), the workspace folder name in monospace, and a notes count. It does not show *what file you are currently reading*. The only place is the `<h1>` rendered inside the markdown body, which scrolls away.
+**Issue:** The bar shows the brand ("MDGalley"), the workspace folder name in monospace, and a notes count. It does not show *what file you are currently reading*. The only place is the `<h1>` rendered inside the markdown body, which scrolls away.
 **Why it matters:** Reviewers who scroll deep into a 6000-word chapter lose orientation. Every ebook reader keeps the chapter title in a persistent header (Kindle, Apple Books, Readwise).
 **Fix:** Add a `chapter-title` span to the app bar, populated from `FILE_LOADED` payload's `chapterTitle`. Replace the workspace label or layer it as a subtle second line:
 ```html
@@ -285,7 +285,7 @@ Render with the same six color chips for visual continuity with what they will s
 **Why it matters:** Probably 10-20% of reviewers will hit this gate. The current copy turns them away with a paragraph of vendor jargon.
 **Fix:**
 ```
-Bookwright needs Chrome, Edge, Brave, Arc, or Opera
+MDGalley needs Chrome, Edge, Brave, Arc, or Opera
 
 This tool reads and writes Markdown files directly on your disk.
 The browser API for that ships in Chromium browsers only.
@@ -332,12 +332,12 @@ Everything stays on your machine. Pick a folder of .md files to begin.
 ### [polish] Title element copy is overwrought
 
 **Where:** `index.html:6`
-**Issue:** `<title>Bookwright. Margin notes for living manuscripts.</title>` is precious. Tab strips show only the first chunk; the second sentence never renders meaningfully.
-**Why it matters:** Tab strips with five tabs all reading "Bookwright. Margin notes for liv..." are useless.
-**Fix:** Update title dynamically once a file is loaded: `<chapterTitle> · Bookwright`. Keep the long form for the empty state only.
+**Issue:** `<title>MDGalley. Margin notes for living manuscripts.</title>` is precious. Tab strips show only the first chunk; the second sentence never renders meaningfully.
+**Why it matters:** Tab strips with five tabs all reading "MDGalley. Margin notes for liv..." are useless.
+**Fix:** Update title dynamically once a file is loaded: `<chapterTitle> · MDGalley`. Keep the long form for the empty state only.
 
 ## Bigger bets (optional)
 
-1. **A "review pass" mode that gates progress through the chapter.** Replace the comments panel during a long read with a focus-mode side rail that tracks where you have been (scroll position), what you have flagged, and what you have skipped. End-of-chapter, surface a one-screen summary: 12 notes across 6 categories, 2 sections unread. This turns Bookwright from a sticky-note tool into a chapter-completion ritual, which is what a 32-chapter book actually needs.
+1. **A "review pass" mode that gates progress through the chapter.** Replace the comments panel during a long read with a focus-mode side rail that tracks where you have been (scroll position), what you have flagged, and what you have skipped. End-of-chapter, surface a one-screen summary: 12 notes across 6 categories, 2 sections unread. This turns MDGalley from a sticky-note tool into a chapter-completion ritual, which is what a 32-chapter book actually needs.
 2. **Cross-chapter search and category filter.** With 32 chapters and presumably hundreds of notes, the reviewer will eventually need to ask "show me every `fact` note in Part 2." Right now the comments panel is per-file. A second tab or a filter chip row in the comments panel header (`All · Prose · Fact · Structure · ...`) plus a "show across workspace" toggle would extend the tool's utility to a second pass.
 3. **Optional inline reply / counter-note.** The export anchors notes by line range and quote. Authors who fix one but not another would benefit from an in-app "addressed" toggle on each card (struck-through and dimmed when checked). On next save, the export can split addressed vs open. This is the difference between a one-shot review file and a living review document, which is closer to the Workspace Comments mental model the audience already uses.

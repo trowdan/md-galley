@@ -15,10 +15,10 @@ export class Gate extends Component {
         this.root.hidden = false;
         this.root.innerHTML = `
             <div class="gate__inner">
-                <p class="gate__kicker">bookwright</p>
+                <p class="gate__kicker">mdgalley</p>
                 <h1 class="gate__title">This browser cannot edit your manuscript.</h1>
                 <p class="gate__body">
-                    Bookwright reads and writes files on your disk through the
+                    MDGalley reads and writes files on your disk through the
                     File System Access API. That capability ships in Chromium browsers;
                     your current browser does not expose it. Your manuscript never
                     leaves your machine, but the tool needs the API to read it.
@@ -36,15 +36,15 @@ export class Gate extends Component {
      * @param {boolean}     [opts.afterReset] If true, render the "reset complete" message.
      */
     showOpenWorkspace({ knownPath = null, afterReset = false } = {}) {
-        let kicker = "bookwright";
+        let kicker = "mdgalley";
         let title, body;
 
         if (afterReset) {
             kicker = "reset complete";
             title = "Pick a workspace to start fresh.";
             body = `
-                Bookwright cleared every note, the saved theme and filter,
-                and the <code>.bookwright</code> folder in your last workspace.
+                MDGalley cleared every note, the saved theme and filter,
+                and the <code>.mdgalley</code> folder in your last workspace.
                 Reviews you had already exported are still on disk.
             `;
         } else if (knownPath) {

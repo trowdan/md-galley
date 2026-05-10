@@ -23,6 +23,7 @@ import { Marginalia } from "./ui/marginalia.js";
 import { Palette } from "./ui/palette.js";
 import { Toast } from "./ui/toast.js";
 import { FilterStrip } from "./ui/filterStrip.js";
+import { PassDialog } from "./ui/passDialog.js";
 
 const supported = WorkspaceService.isSupported();
 
@@ -65,6 +66,7 @@ async function bootApp() {
         new Marginalia(document.getElementById("manuscript"), deps),
         new Palette(document.getElementById("palette"), deps),
         new Toast(document.getElementById("toast"), deps),
+        new PassDialog(document.getElementById("pass-dialog"), deps),
     ];
     components.forEach((c) => c.mount());
     notesPersister.mount();
@@ -94,26 +96,26 @@ async function onWorkspaceOpened() {
     if (!workspace.handle) return;
     gate.hide();
     const workspaceName = workspace.handle.name;
-    console.log(`[bookwright] workspace opened: "${workspaceName}"`);
+    console.log(`[mdgalley] workspace opened: "${workspaceName}"`);
 
     // Drop a marker into the workspace's tool folder. Idempotent: only
     // creates state.json on first open of this workspace.
     await writeToolState(workspace.handle).catch((err) => {
-        console.warn("[bookwright] writeToolState failed", err);
+        console.warn("[mdgalley] writeToolState failed", err);
     });
     // Disk is the source of truth for notes: hydrate the IndexedDB cache
-    // from .bookwright/notes/*.json BEFORE the first FILE_LOADED event.
+    // from .mdgalley/notes/*.json BEFORE the first FILE_LOADED event.
     // The manuscript view always reads notes from the (now-warm) cache.
     await notesPersister.hydrate().catch((err) => {
-        console.warn("[bookwright] notesPersistence: hydrate failed", err);
+        console.warn("[mdgalley] notesPersistence: hydrate failed", err);
     });
     // Seed the taste logger's status cache before any auto-resolve fires, so
     // RESOLVE entries record the correct previous status.
     await tasteLogger.hydrate().catch((err) => {
-        console.warn("[bookwright] tasteLogger: hydrate failed", err);
+        console.warn("[mdgalley] tasteLogger: hydrate failed", err);
     });
     await passStore.hydrate().catch((err) => {
-        console.warn("[bookwright] passStore: hydrate failed", err);
+        console.warn("[mdgalley] passStore: hydrate failed", err);
     });
     // Drafter roundtrip: any reviews/*-applied.md files left by a downstream
     // agent flip matching `open` notes to `resolved` so the reviewer's gutter
@@ -123,33 +125,64 @@ async function onWorkspaceOpened() {
         const appliedIds = await readAppliedIds(workspace.handle);
         const flipped = await flipAccepted(annotationStore, appliedIds);
         if (flipped > 0) {
-            console.log(`[bookwright] applied roundtrip: auto-resolved ${flipped} note(s)`);
+            console.log(`[mdgalley] applied roundtrip: auto-resolved ${flipped} note(s)`);
             bus.emit(Events.TOAST, { message: `${flipped} note(s) auto-resolved from applied.md` });
         }
     } catch (err) {
-        console.warn("[bookwright] applied roundtrip failed", err);
+        console.warn("[mdgalley] applied roundtrip failed", err);
     }
 
     let fileList = [];
     try {
         fileList = await files.list(workspace.handle);
-        console.log(`[bookwright] workspace "${workspaceName}" -> ${fileList.length} markdown file(s)`,
+        console.log(`[mdgalley] workspace "${workspaceName}" -> ${fileList.length} markdown file(s)`,
             fileList.map((f) => f.path));
     } catch (err) {
-        console.error("[bookwright] files.list failed", err);
+        console.error("[mdgalley] files.list failed", err);
         bus.emit(Events.TOAST, {
             message: `could not read workspace: ${err?.message ?? err?.name ?? "unknown error"}`,
         });
     }
 
     bus.emit(Events.FILES_LISTED, { files: fileList, workspaceName });
+
+    // Continuous (manuscript-across-files) mode: read every file in workspace
+    // order and render them as one continuous text. The mode is persisted in
+    // localStorage; flipping it requires a page reload (chrome toggle).
+    if (continuousModeOn() && fileList.length > 0) {
+        try {
+            const sources = [];
+            for (const f of fileList) {
+                const text = await files.read(f.handle);
+                sources.push({ path: f.path, source: text });
+            }
+            bus.emit(Events.WORKSPACE_RENDERED, { files: sources });
+        } catch (err) {
+            console.error("[mdgalley] continuous render failed", err);
+            // Fall back to single-file mode for this session.
+            if (fileList.length > 0) bus.emit(Events.FILE_SELECTED, { path: fileList[0].path });
+        }
+        return;
+    }
+
     if (fileList.length > 0) {
         bus.emit(Events.FILE_SELECTED, { path: fileList[0].path });
     }
 }
 
+function continuousModeOn() {
+    try { return localStorage.getItem("mdgalley:continuous") === "true"; }
+    catch { return false; }
+}
+
 async function onFileSelected({ path }) {
     if (!workspace.handle) return;
+    // Continuous mode: the manuscript already holds every file. Treat the
+    // selection as a scroll-to action against the rendered file segment.
+    if (continuousModeOn()) {
+        bus.emit(Events.FILE_FOCUSED, { filePath: path });
+        return;
+    }
     const fileList = await files.list(workspace.handle);
     const meta = fileList.find((f) => f.path === path);
     if (!meta) return;
@@ -187,7 +220,7 @@ async function openWorkspace() {
             message: "picker stuck. close this tab and reopen the page.",
         });
         console.warn(
-            "[bookwright] showDirectoryPicker has not resolved after 4s. " +
+            "[mdgalley] showDirectoryPicker has not resolved after 4s. " +
             "Close this tab (⌘W) and open a fresh one at this URL."
         );
     }, 4000);
@@ -199,7 +232,7 @@ async function openWorkspace() {
         clearTimeout(stuckTimer);
         if (err?.name === "AbortError") return;
         if (err?.name === "NotAllowedError") return; // duplicate trigger
-        console.error("[bookwright] picker failed", err);
+        console.error("[mdgalley] picker failed", err);
         bus.emit(Events.TOAST, { message: `picker failed: ${err?.name ?? "error"}` });
         return;
     }
@@ -211,7 +244,7 @@ async function openWorkspace() {
         bus.emit(Events.PALETTE_CLOSE);
         bus.emit(Events.WORKSPACE_OPENED, { reload: false });
     } catch (err) {
-        console.error("[bookwright] could not store handle", err);
+        console.error("[mdgalley] could not store handle", err);
         bus.emit(Events.TOAST, { message: "could not open workspace" });
     }
 }

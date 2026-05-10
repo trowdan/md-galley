@@ -3,9 +3,9 @@
 
 const MD_EXTENSIONS = [".md", ".markdown"];
 
-// Directories the file walker skips. `reviews/` holds Bookwright's exported
+// Directories the file walker skips. `reviews/` holds MDGalley's exported
 // review files, which are outputs not source chapters; dot-prefixed dirs
-// (including .bookwright/) hold tool state.
+// (including .mdgalley/) hold tool state.
 const EXCLUDED_DIRS = new Set(["reviews"]);
 
 function isMarkdown(name) {

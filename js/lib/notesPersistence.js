@@ -4,7 +4,7 @@
 // hydrated from disk on workspace open, mirrored on every mutation.
 //
 // Layout under the workspace root:
-//   .bookwright/
+//   .mdgalley/
 //     state.json              tool metadata (created by toolDir)
 //     notes/
 //       <file path>.json      one JSON array per manuscript file
@@ -37,7 +37,7 @@ export class NotesDiskPersister {
         this.bus.on(Events.ANNOTATION_DELETED, (e) => this.#enqueue(e.filePath));
     }
 
-    /** Read every notes JSON under .bookwright/notes/ and seed the
+    /** Read every notes JSON under .mdgalley/notes/ and seed the
      *  AnnotationStore. Called from the workspace-open orchestrator
      *  BEFORE any file is loaded, so the manuscript view never has to
      *  redraw to pick up disk-only notes. */

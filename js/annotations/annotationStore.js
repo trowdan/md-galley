@@ -84,7 +84,7 @@ export class AnnotationStore {
     }
 
     /** Replace the IDB cache wholesale. Used by the disk-persistence layer
-     *  to seed the cache from <workspace>/.bookwright/notes/ on workspace
+     *  to seed the cache from <workspace>/.mdgalley/notes/ on workspace
      *  open. Bypasses event emission: the UI will redraw via FILE_LOADED. */
     async bulkReplace(byFile) {
         await idb.clear(STORE);

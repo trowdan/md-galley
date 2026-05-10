@@ -36,6 +36,7 @@ export class Marginalia extends Component {
         this.scheduledLayout = null;
         this.anchorStates = new Map(); // id -> { state, blockEl }
         this.activePassId = null;
+        this.continuous = false;
     }
 
     mount() {
@@ -46,6 +47,7 @@ export class Marginalia extends Component {
         this.listen(Events.LAYOUT_REFLOW, this.scheduleLayout);
         this.listen(Events.ANCHOR_STATES_RESOLVED, this.onAnchorStatesResolved);
         this.listen(Events.PASS_CHANGED, this.onPassChanged);
+        this.listen(Events.WORKSPACE_RENDERED, this.onWorkspaceRendered);
         this.listen(Events.FILTER_CHANGED, this.onFilterChanged);
         this.listen(Events.COMPOSER_OPEN, this.onComposerOpen);
         this.listen(Events.COMPOSER_CLOSE, this.closeComposer);
@@ -113,7 +115,8 @@ export class Marginalia extends Component {
                 patch.block = c.anchor.block ?? null;
                 patch.scope = c.scope ?? "anchored";
             }
-            await this.deps.annotationStore.patch(this.currentFile, c.editingId, patch);
+            const editFilePath = c.filePath ?? this.filePathFor(c.editingId);
+            await this.deps.annotationStore.patch(editFilePath, c.editingId, patch);
             this.deps.bus.emit(Events.TOAST, {
                 message: c.anchorReanchored ? "note re-anchored" : "note updated",
             });
@@ -166,9 +169,22 @@ export class Marginalia extends Component {
     }
 
     async refresh() {
+        if (this.continuous) {
+            const all = await this.deps.annotationStore.listAll();
+            this.annotations = [];
+            for (const list of all.values()) this.annotations.push(...list);
+            this.render();
+            return;
+        }
         if (!this.currentFile) return;
         this.annotations = await this.deps.annotationStore.listFor(this.currentFile);
         this.render();
+    }
+
+    async onWorkspaceRendered() {
+        this.continuous = true;
+        this.currentFile = null;
+        await this.refresh();
     }
 
     onAnchorStatesResolved({ states }) {
@@ -318,6 +334,14 @@ export class Marginalia extends Component {
         }
     }
 
+    filePathFor(id) {
+        // In continuous mode, this.currentFile is null; the annotation's own
+        // filePath is the source of truth. Single-file mode keeps the old
+        // currentFile fallback so the existing flow is unchanged.
+        const ann = this.annotations.find((a) => a.id === id);
+        return ann?.filePath ?? this.currentFile ?? null;
+    }
+
     onGutterClick(ev) {
         const noteEl = ev.target.closest(".note");
         if (!noteEl) return;
@@ -327,8 +351,9 @@ export class Marginalia extends Component {
         if (action) {
             ev.stopPropagation();
             const what = action.dataset.action;
-            if (what === "resolve") this.deps.annotationStore.toggleStatus(this.currentFile, id);
-            else if (what === "delete") this.deps.annotationStore.remove(this.currentFile, id);
+            const filePath = this.filePathFor(id);
+            if (what === "resolve") this.deps.annotationStore.toggleStatus(filePath, id);
+            else if (what === "delete") this.deps.annotationStore.remove(filePath, id);
             else if (what === "edit") this.startEdit(id);
             return;
         }
@@ -441,6 +466,10 @@ export class Marginalia extends Component {
                 if (lineStart) el.dataset.blockLineStart = lineStart;
             }
         }
+        // Continuous mode: stamp the file path so anchorTopFor scopes its
+        // mark.hl and block lookups to the right file segment when several
+        // files share the same line numbers.
+        if (ann.filePath) el.dataset.filePath = ann.filePath;
 
         const anchorText = describeAnchor(ann);
         const cat = CAT_LABELS[ann.category] ?? ann.category;
@@ -539,9 +568,13 @@ function anchorTopFor(el, textRoot, composerCtx) {
         return anchorEl.getBoundingClientRect().top;
     }
 
+    // In continuous mode, scope the lookups to the right file segment so
+    // identical line numbers across files cannot cross-anchor.
+    const segment = scopeForNoteEl(el, textRoot);
+
     // Quote-anchored note: position next to the highlight that matches its id.
     if (id) {
-        const mark = textRoot.querySelector(`mark.hl[data-annotation-id="${CSS.escape(id)}"]`);
+        const mark = segment.querySelector(`mark.hl[data-annotation-id="${CSS.escape(id)}"]`);
         if (mark) return mark.getBoundingClientRect().top;
     }
 
@@ -550,12 +583,19 @@ function anchorTopFor(el, textRoot, composerCtx) {
     // note element when the resolution map arrived.
     const blockLineStart = el.dataset.blockLineStart;
     if (blockLineStart) {
-        const block = textRoot.querySelector(`.block[data-line-start="${CSS.escape(blockLineStart)}"]`);
+        const block = segment.querySelector(`.block[data-line-start="${CSS.escape(blockLineStart)}"]`);
         if (block) return block.getBoundingClientRect().top;
     }
 
     // Orphan or unknown: stay at the top of the gutter so it is visible.
     return 0;
+}
+
+function scopeForNoteEl(el, textRoot) {
+    const filePath = el.dataset.filePath;
+    if (!filePath) return textRoot;
+    const segment = textRoot.querySelector(`[data-file-path="${CSS.escape(filePath)}"]`);
+    return segment ?? textRoot;
 }
 
 function describeAnchor(ann) {

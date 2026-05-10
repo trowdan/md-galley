@@ -1,17 +1,17 @@
-# Bookwright review schema
+# MDGalley review schema
 
-Canonical reference for the Markdown file Bookwright produces when you click `export N`. Downstream agents that consume this file SHOULD read this document once, key off the `schema:` value declared in the file's front matter, and reject or downgrade-process any version they do not understand.
+Canonical reference for the Markdown file MDGalley produces when you click `export N`. Downstream agents that consume this file SHOULD read this document once, key off the `schema:` value declared in the file's front matter, and reject or downgrade-process any version they do not understand.
 
 ## Versioning policy
 
-Version strings are formatted `bookwright-review/MAJOR.MINOR`.
+Version strings are formatted `mdgalley-review/MAJOR.MINOR`.
 
 - **MAJOR** bumps on a breaking change: a renamed or removed field, a changed field's semantics, or a structural reorganisation. Old consumers will mis-parse the file.
 - **MINOR** bumps on an additive backward-compatible change: a new optional field, a new note variant, **or a new value added to a closed enum** (categories, scopes, statuses, priorities, anchor states). Old consumers can still parse safely.
 - **Closed-enum forward compatibility:** consumers MUST treat any enum value they do not recognise as **opaque content** — preserve it as-is, do not assume a default, do not switch on a closed set. This is what makes new enum values a MINOR bump rather than a MAJOR one.
 - No PATCH segment. Either the contract changed shape or it did not.
 
-The version string is namespaced (`bookwright-review/...`) so future workspace artefacts (taste log, applied-revisions log, etc.) can carry their own contracts without colliding on the bare number.
+The version string is namespaced (`mdgalley-review/...`) so future workspace artefacts (taste log, applied-revisions log, etc.) can carry their own contracts without colliding on the bare number.
 
 ## Source of truth
 
@@ -32,24 +32,24 @@ YAML front matter delimited by `---` lines, in the following key order:
 | Key | Type | Required | Meaning |
 |---|---|---|---|
 | `review_date` | ISO date `YYYY-MM-DD` | yes | Date the export was produced. |
-| `schema` | string `bookwright-review/MAJOR.MINOR` | yes | The contract version. For v1.0 files: literally `bookwright-review/1.0`. (See the v1.2 stanza below for the current shipping version.) |
+| `schema` | string `mdgalley-review/MAJOR.MINOR` | yes | The contract version. For v1.0 files: literally `mdgalley-review/1.0`. (See the v1.2 stanza below for the current shipping version.) |
 | `files_reviewed` | integer | yes | Number of source files that contributed at least one note to this export. |
 | `total_notes` | integer | yes | Total notes across all files (open + resolved). |
 | `open` | integer | yes | Notes with `status: open`. |
 | `resolved` | integer | yes | Notes with `status: resolved`. |
-| `generator` | string | yes | Producing tool. For v1.0: literally `bookwright`. |
+| `generator` | string | yes | Producing tool. For v1.0: literally `mdgalley`. |
 
 Example front matter:
 
 ```yaml
 ---
 review_date: 2026-05-10
-schema: bookwright-review/1.0
+schema: mdgalley-review/1.0
 files_reviewed: 1
 total_notes: 1
 open: 1
 resolved: 0
-generator: bookwright
+generator: mdgalley
 ---
 ```
 
@@ -116,12 +116,12 @@ The export action does not accept user-controlled paths; the review file path is
 
 ## Pre-versioned files (v0)
 
-Review files produced by Bookwright before this contract was declared do not carry a `schema:` field. Consumers SHOULD identify these by the absence of that key and either:
+Review files produced by MDGalley before this contract was declared do not carry a `schema:` field. Consumers SHOULD identify these by the absence of that key and either:
 
 - skip them entirely, or
 - process them with reduced confidence: treat the front matter as best-effort and the body shape as approximately v1.0 (no formal guarantee — pre-versioned bodies were never under contract).
 
-Bookwright will not rewrite or backfill pre-versioned files. They are historical artefacts.
+MDGalley will not rewrite or backfill pre-versioned files. They are historical artefacts.
 
 ---
 
@@ -131,7 +131,7 @@ v1.1 is the additive successor to v1.0. The only change: one new optional per-no
 
 ### Diff from v1.0
 
-- Front-matter `schema` value is `bookwright-review/1.1`. All other front-matter keys, types, and ordering are unchanged.
+- Front-matter `schema` value is `mdgalley-review/1.1`. All other front-matter keys, types, and ordering are unchanged.
 - Per-note: new optional field `because`, rendered after `comment`.
 
 ### Per-note fields (v1.1)
@@ -175,7 +175,7 @@ v1.2 is the additive successor to v1.1. The only change: one new optional per-no
 
 ### Diff from v1.1
 
-- Front-matter `schema` value is `bookwright-review/1.2`. All other front-matter keys, types, and ordering are unchanged.
+- Front-matter `schema` value is `mdgalley-review/1.2`. All other front-matter keys, types, and ordering are unchanged.
 - Per-note: new optional field `block`, rendered after `because` (or after `comment` when `because` is absent).
 
 ### Per-note fields (v1.2)
@@ -224,7 +224,7 @@ v1.3 is the additive successor to v1.2. The only change: two new optional per-no
 
 ### Diff from v1.2
 
-- Front-matter `schema` value is `bookwright-review/1.3`.
+- Front-matter `schema` value is `mdgalley-review/1.3`.
 - Per-note (resolved notes only): new optional fields `resolved_at` (ISO 8601 timestamp) and `accepted_source` (closed enum `manual` | `applied`).
 
 ### Per-note fields (v1.3, additions)
@@ -251,18 +251,18 @@ Both lines are emitted only when `status: resolved` and `resolved_at` is present
 
 ## v1.4 contract
 
-v1.4 is the additive successor to v1.3. The only change: one new optional per-note field, `pass_id`, recording the named pass the note was created under (see the sibling `bookwright-passes/1.0` contract). Front matter, file location, vocabulary, sort order, and every prior field are unchanged. v1.0–v1.3 consumers reading a v1.4 file will safely ignore the new field.
+v1.4 is the additive successor to v1.3. The only change: one new optional per-note field, `pass_id`, recording the named pass the note was created under (see the sibling `mdgalley-passes/1.0` contract). Front matter, file location, vocabulary, sort order, and every prior field are unchanged. v1.0–v1.3 consumers reading a v1.4 file will safely ignore the new field.
 
 ### Diff from v1.3
 
-- Front-matter `schema` value is `bookwright-review/1.4`.
+- Front-matter `schema` value is `mdgalley-review/1.4`.
 - Per-note: new optional field `pass_id`, rendered as a backticked identifier line.
 
 ### Per-note fields (v1.4, addition)
 
 | Field | Type | Required | Meaning |
 |---|---|---|---|
-| `pass_id` | inline-code string | optional | Identifier of the named pass the note was created under, e.g., `p-citations-2026-05-10`. Empty when the note was created with no active pass. Cross-reference the `bookwright-passes/1.0` sibling artefact for the human-readable name. |
+| `pass_id` | inline-code string | optional | Identifier of the named pass the note was created under, e.g., `p-citations-2026-05-10`. Empty when the note was created with no active pass. Cross-reference the `mdgalley-passes/1.0` sibling artefact for the human-readable name. |
 
 ### Rendering
 
@@ -276,16 +276,16 @@ wrong article number; should be 5(1)(c).
 
 ---
 
-## Sibling contract: drafter roundtrip (`bookwright-applied/1.0`)
+## Sibling contract: drafter roundtrip (`mdgalley-applied/1.0`)
 
-A downstream drafter agent that applies review notes to the source SHOULD write a sibling file at `reviews/YYYY-MM-DD-applied.md` listing the IDs of the notes it acted on. On the next workspace open, Bookwright reads every `reviews/*-applied.md` file and flips matching `open` annotations to `resolved`, so the reviewer's gutter reflects the addressed work without manual click-through.
+A downstream drafter agent that applies review notes to the source SHOULD write a sibling file at `reviews/YYYY-MM-DD-applied.md` listing the IDs of the notes it acted on. On the next workspace open, MDGalley reads every `reviews/*-applied.md` file and flips matching `open` annotations to `resolved`, so the reviewer's gutter reflects the addressed work without manual click-through.
 
 The applied file is its own contract, namespaced separately from the review file:
 
 ```markdown
 ---
 applied_date: 2026-05-10
-schema: bookwright-applied/1.0
+schema: mdgalley-applied/1.0
 generator: <agent name; free-form string>
 applied_count: 7
 ---
@@ -297,20 +297,20 @@ applied_count: 7
 - a-2n5t9q6w   partial: heading rewrite still pending reviewer approval.
 ```
 
-Bookwright parses the IDs only; everything after the ID on a line is treated as opaque drafter prose. Front-matter `schema` and `generator` are read informationally; missing or malformed front matter does not block parsing.
+MDGalley parses the IDs only; everything after the ID on a line is treated as opaque drafter prose. Front-matter `schema` and `generator` are read informationally; missing or malformed front matter does not block parsing.
 
-The roundtrip is **idempotent**: re-running the import flips only currently-`open` notes, so already-resolved notes are skipped silently. Bookwright never deletes or modifies the applied file.
+The roundtrip is **idempotent**: re-running the import flips only currently-`open` notes, so already-resolved notes are skipped silently. MDGalley never deletes or modifies the applied file.
 
 ---
 
-## Sibling contract: taste log (`bookwright-taste/1.0`)
+## Sibling contract: taste log (`mdgalley-taste/1.0`)
 
-Bookwright maintains an append-only chronological log of every annotation lifecycle event at `<workspace>/.bookwright/taste.md`. The file is written by Bookwright itself; downstream agents read it as the reviewer's **taste artefact**: which kinds of issues they flag, which they accept versus reject, which sections accumulate notes, how often they revert.
+MDGalley maintains an append-only chronological log of every annotation lifecycle event at `<workspace>/.mdgalley/taste.md`. The file is written by MDGalley itself; downstream agents read it as the reviewer's **taste artefact**: which kinds of issues they flag, which they accept versus reject, which sections accumulate notes, how often they revert.
 
 ```markdown
 ---
-schema: bookwright-taste/1.0
-generator: bookwright
+schema: mdgalley-taste/1.0
+generator: mdgalley
 ---
 
 # Taste log
@@ -336,22 +336,22 @@ Each line is one event: `- <ISO timestamp>  <VERB>  <annotation id>  <verb-speci
 
 Pass-related events are also logged: `PASS_START` (a new pass was declared and activated), `PASS_SWITCH` (the active pass changed to a different one), `PASS_END` (the active pass was ended; the pass record stays in the workspace).
 
-The log is **append-only**. Bookwright never rewrites or compacts it. Older entries remain authoritative even when the underlying notes have since been deleted: the trace of *what was flagged and what happened to it* is the artefact.
+The log is **append-only**. MDGalley never rewrites or compacts it. Older entries remain authoritative even when the underlying notes have since been deleted: the trace of *what was flagged and what happened to it* is the artefact.
 
 Consumers MUST tolerate unknown future verbs (treat as opaque events) and unknown payload tokens (preserve as-is).
 
 ---
 
-## Sibling contract: named passes (`bookwright-passes/1.0`)
+## Sibling contract: named passes (`mdgalley-passes/1.0`)
 
 A "pass" is a declared scope of review activity ("the citations pass on chapter 3", "the voice pass on the whole book"). Notes created while a pass is active carry its `pass_id` so the gutter can later filter to "only this pass". Passes are resumable across workspace opens.
 
-The list of known passes plus the active-pass pointer live at `<workspace>/.bookwright/passes.json`:
+The list of known passes plus the active-pass pointer live at `<workspace>/.mdgalley/passes.json`:
 
 ```json
 {
-  "schema": "bookwright-passes/1.0",
-  "generator": "bookwright",
+  "schema": "mdgalley-passes/1.0",
+  "generator": "mdgalley",
   "active": "p-citations-2026-05-10",
   "passes": [
     {
@@ -364,7 +364,7 @@ The list of known passes plus the active-pass pointer live at `<workspace>/.book
 }
 ```
 
-`active` is `null` when no pass is currently in scope. Ending a pass clears the `active` pointer but keeps the pass record in `passes` for future resume. Bookwright never auto-deletes pass records; the human can forget a pass via the UI, which removes it from the list (notes that referenced it lose their group but otherwise persist).
+`active` is `null` when no pass is currently in scope. Ending a pass clears the `active` pointer but keeps the pass record in `passes` for future resume. MDGalley never auto-deletes pass records; the human can forget a pass via the UI, which removes it from the list (notes that referenced it lose their group but otherwise persist).
 
 The `pass_id` format is `p-<slug>-<YYYY-MM-DD>` where `<slug>` is the lowercased name with non-alphanumeric runs collapsed to `-`. The format is stable; consumers MAY rely on the prefix `p-` and the trailing date but SHOULD treat the whole id as opaque otherwise.
 

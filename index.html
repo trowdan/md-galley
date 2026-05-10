@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bookwright</title>
+    <title>MDGalley</title>
 
     <link rel="stylesheet" href="styles/tokens.css">
     <link rel="stylesheet" href="styles/reset.css">
@@ -19,7 +19,7 @@
 
     <header id="chrome" class="chrome" hidden>
         <div class="chrome__left">
-            <button class="chrome__brand" id="brand" title="Open command palette">Bookwright</button>
+            <button class="chrome__brand" id="brand" title="Open command palette">MDGalley</button>
             <span class="chrome__sep" aria-hidden="true">·</span>
             <span class="chrome__file" id="chrome-file">no file open</span>
         </div>
@@ -47,16 +47,56 @@
                     <span class="chrome__cmd-glyph" aria-hidden="true">⚙</span>
                 </button>
                 <div id="settings-menu" class="settings-menu" role="menu" hidden>
+                    <button class="settings-menu__item" data-action="continuous" type="button" role="menuitem">
+                        <span class="settings-menu__glyph" aria-hidden="true">⤢</span>
+                        <span class="settings-menu__label" id="continuous-toggle-label">manuscript across files</span>
+                        <span class="settings-menu__hint">render the whole workspace as one continuous text (page reload)</span>
+                    </button>
                     <button class="settings-menu__item" data-action="reset" type="button" role="menuitem">
                         <span class="settings-menu__glyph" aria-hidden="true">↻</span>
-                        <span class="settings-menu__label">reset bookwright</span>
-                        <span class="settings-menu__hint">erases notes, theme, .bookwright folder</span>
+                        <span class="settings-menu__label">reset mdgalley</span>
+                        <span class="settings-menu__hint">erases notes, theme, .mdgalley folder</span>
                     </button>
                 </div>
             </div>
             <button class="chrome__action" id="export-review" disabled>export 0</button>
         </div>
     </header>
+
+    <dialog id="pass-dialog" class="pass-dialog" aria-labelledby="pass-dialog-title">
+        <div class="pass-dialog__inner">
+            <header class="pass-dialog__head">
+                <h2 class="pass-dialog__title" id="pass-dialog-title">passes</h2>
+                <button type="button" class="pass-dialog__close" data-action="close" aria-label="close">×</button>
+            </header>
+            <p class="pass-dialog__intro">
+                A pass is a declared scope of review activity. Notes you create while a pass is active carry its id; the gutter filters to only that pass. Passes are resumable.
+            </p>
+
+            <section class="pass-dialog__active" data-section="active" hidden>
+                <h3 class="pass-dialog__h3">active</h3>
+                <div class="pass-dialog__active-row">
+                    <span class="pass-dialog__active-name" id="pass-dialog-active-name"></span>
+                    <button type="button" class="pass-dialog__action pass-dialog__action--end" data-action="end">end pass</button>
+                </div>
+            </section>
+
+            <section class="pass-dialog__list-section" data-section="list" hidden>
+                <h3 class="pass-dialog__h3" id="pass-dialog-list-h3">resume an earlier pass</h3>
+                <ul class="pass-dialog__items" id="pass-dialog-items"></ul>
+            </section>
+
+            <section class="pass-dialog__create-section">
+                <h3 class="pass-dialog__h3">start a new pass</h3>
+                <form class="pass-dialog__create" id="pass-dialog-create">
+                    <input type="text" id="pass-dialog-input" class="pass-dialog__input"
+                           placeholder="name (e.g. citations, voice, structure)"
+                           autocomplete="off" maxlength="64" required />
+                    <button type="submit" class="pass-dialog__action pass-dialog__action--primary">start</button>
+                </form>
+            </section>
+        </div>
+    </dialog>
 
     <nav id="filter-strip" class="filter-strip" aria-label="Filter notes by status" hidden>
         <div class="filter-strip__inner">
@@ -65,7 +105,9 @@
             <button data-filter="resolved">resolved</button>
             <button data-filter="all">all</button>
             <span class="filter-strip__sep" aria-hidden="true">·</span>
-            <span class="filter-strip__pass" id="filter-strip-pass" data-state="none"></span>
+            <button type="button" class="filter-strip__pass-chip" id="filter-strip-pass" data-state="none">
+                <span class="filter-strip__pass-chip-label">+ pass</span>
+            </button>
         </div>
     </nav>
 

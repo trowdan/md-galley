@@ -1,5 +1,5 @@
 // Pass repository. In-memory state plus a single-file disk mirror at
-// `<workspace>/.bookwright/passes.json`. Small data, simple lifecycle:
+// `<workspace>/.mdgalley/passes.json`. Small data, simple lifecycle:
 // list, active pointer, activate / deactivate / create / rename / forget.
 // Pattern: repository over a JSON file, with bus emission on change.
 
@@ -8,7 +8,7 @@ import { TOOL_DIR } from "../lib/toolDir.js";
 import { Events } from "../lib/eventBus.js";
 
 const PASSES_FILE = "passes.json";
-const PASSES_SCHEMA_VERSION = "bookwright-passes/1.0";
+const PASSES_SCHEMA_VERSION = "mdgalley-passes/1.0";
 
 export class PassStore {
     constructor({ workspace, bus }) {
@@ -100,7 +100,7 @@ export class PassStore {
             const writable = await fileHandle.createWritable();
             const payload = {
                 schema: PASSES_SCHEMA_VERSION,
-                generator: "bookwright",
+                generator: "mdgalley",
                 active: this.activeId,
                 passes: [...this.passes.values()].map((p) => p.toJSON()),
             };

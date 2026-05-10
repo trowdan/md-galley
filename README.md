@@ -1,10 +1,10 @@
-# Bookwright
+# MDGalley
 
 A frontend-only reviewer for the *AI Act for Techies* manuscript. Read your chapters in a typeset reading column, leave anchored or chapter-level notes in the live margin, then export a single Markdown review file you can hand to an AI agent or human editor.
 
 ## Why it exists
 
-Reviewing a long-form draft via the standard "open VS Code, click preview, ask the AI to change one passage, wait, repeat" loop is a bad fit for actual reading. Bookwright collapses the loop: read the whole chapter, accumulate notes, export one file with every change request anchored to source lines.
+Reviewing a long-form draft via the standard "open VS Code, click preview, ask the AI to change one passage, wait, repeat" loop is a bad fit for actual reading. MDGalley collapses the loop: read the whole chapter, accumulate notes, export one file with every change request anchored to source lines.
 
 ## How v2 differs from a generic reviewer
 
@@ -85,7 +85,7 @@ Notes are grouped by file, then ordered open-first, then by source line. Quoted 
 
 ### Schema
 
-Every exported review file declares its contract in the front matter via `schema: bookwright-review/MAJOR.MINOR`. The current version is `bookwright-review/1.4`. v1.1 added an optional per-note `because` field for rationale. v1.2 adds an optional per-note `block` field for paragraph-level fallback re-anchoring after source edits. v1.3 adds optional per-note `resolved_at` and `accepted_source` fields recording the acceptance trace (whether a note closed by manual click or by a drafter's `reviews/*-applied.md` roundtrip). v1.4 adds an optional per-note `pass_id` field tying the note to a named pass (see the sibling `bookwright-passes/1.0` artefact). All bumps are additive: v1.0 consumers parse newer files safely and ignore unknown fields. The full per-version contract (front matter keys, per-note fields, category and scope vocabulary, prompt-injection rules, sibling contracts, and the policy for files predating the contract) lives in [`SCHEMA.md`](SCHEMA.md). Downstream agents should read it once and key off the version string.
+Every exported review file declares its contract in the front matter via `schema: mdgalley-review/MAJOR.MINOR`. The current version is `mdgalley-review/1.4`. v1.1 added an optional per-note `because` field for rationale. v1.2 adds an optional per-note `block` field for paragraph-level fallback re-anchoring after source edits. v1.3 adds optional per-note `resolved_at` and `accepted_source` fields recording the acceptance trace (whether a note closed by manual click or by a drafter's `reviews/*-applied.md` roundtrip). v1.4 adds an optional per-note `pass_id` field tying the note to a named pass (see the sibling `mdgalley-passes/1.0` artefact). All bumps are additive: v1.0 consumers parse newer files safely and ignore unknown fields. The full per-version contract (front matter keys, per-note fields, category and scope vocabulary, prompt-injection rules, sibling contracts, and the policy for files predating the contract) lives in [`SCHEMA.md`](SCHEMA.md). Downstream agents should read it once and key off the version string.
 
 ## Architecture
 

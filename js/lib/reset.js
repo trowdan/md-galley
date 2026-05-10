@@ -1,5 +1,5 @@
-// Hard reset. Wipes every byte Bookwright owns in the user's environment:
-// IndexedDB stores, our localStorage keys, the .bookwright/ folder.
+// Hard reset. Wipes every byte MDGalley owns in the user's environment:
+// IndexedDB stores, our localStorage keys, the .mdgalley/ folder.
 // Reviews the user has exported are user artefacts and stay untouched.
 //
 // Confirmation goes through Gate.showConfirm (a typeset in-app modal) so
@@ -11,22 +11,22 @@ import { idb } from "./idb.js";
 import { removeToolDir } from "./toolDir.js";
 
 const LS_KEYS = [
-    "bookwright:theme",
-    "bookwright:filter",
-    "bookwright:rail",
+    "mdgalley:theme",
+    "mdgalley:filter",
+    "mdgalley:rail",
 ];
 
 const IDB_STORES = ["annotations", "workspace"];
 
-const RESET_FLAG_KEY = "bookwright:just-reset";
+const RESET_FLAG_KEY = "mdgalley:just-reset";
 
 export async function performReset({ workspace, bus, Events, gate }) {
     const ok = await gate.showConfirm({
         kicker: "danger",
-        title: "Reset Bookwright?",
+        title: "Reset MDGalley?",
         body: `
             This deletes every note in your browser, the saved theme, the saved
-            filter, and the <code>.bookwright</code> folder in your workspace.
+            filter, and the <code>.mdgalley</code> folder in your workspace.
             Reviews you exported (under <code>reviews/</code>) are kept.<br><br>
             <strong>This cannot be undone.</strong>
         `,

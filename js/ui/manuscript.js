@@ -3,7 +3,7 @@
 
 import { Component } from "../lib/component.js";
 import { Events } from "../lib/eventBus.js";
-import { renderMarkdown } from "../markdown/renderer.js";
+import { renderMarkdown, renderWorkspace } from "../markdown/renderer.js";
 import { resolveAnchored } from "../annotations/anchor.js";
 import { applyHighlights, setFocused } from "../annotations/highlightLayer.js";
 
@@ -20,6 +20,8 @@ export class Manuscript extends Component {
     mount() {
         this.listen(Events.FILE_LOADED, this.onFileLoaded);
         this.listen(Events.FILES_LISTED, this.onFilesListed);
+        this.listen(Events.WORKSPACE_RENDERED, this.onWorkspaceRendered);
+        this.listen(Events.FILE_FOCUSED, this.onFileFocused);
         this.listen(Events.ANNOTATION_CREATED, this.refreshFromStore);
         this.listen(Events.ANNOTATION_UPDATED, this.refreshFromStore);
         this.listen(Events.ANNOTATION_DELETED, this.refreshFromStore);
@@ -29,6 +31,27 @@ export class Manuscript extends Component {
         this.bind(this.textEl, "mouseup", this.scheduleSelectionResolve);
         this.bind(this.textEl, "keyup", this.scheduleSelectionResolve);
         this.bind(this.textEl, "click", this.onClick);
+    }
+
+    /** Continuous-mode entry point: receives every loaded source in render
+     *  order and renders one workspace-as-one-text view. Replaces single-
+     *  file currentFile bookkeeping with a continuous flag. */
+    onWorkspaceRendered({ files }) {
+        const { html } = renderWorkspace(files);
+        this.textEl.innerHTML = `<div class="manuscript__body manuscript__body--continuous">${html}</div>`;
+        this.continuous = true;
+        this.currentFile = null;
+        this.refreshFromStore();
+        this.root.parentElement?.scrollTo?.({ top: 0 });
+    }
+
+    /** In continuous mode, FILE_SELECTED becomes a scroll-to action against
+     *  the rendered file segment. We re-route via FILE_FOCUSED so single-
+     *  file mode stays untouched. */
+    onFileFocused({ filePath }) {
+        if (!this.continuous) return;
+        const segment = this.textEl.querySelector(`[data-file-path="${CSS.escape(filePath)}"]`);
+        if (segment) segment.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     onFilesListed({ files, workspaceName }) {
@@ -47,14 +70,14 @@ export class Manuscript extends Component {
                 <p class="manuscript__empty-kicker">empty workspace</p>
                 <h2 class="manuscript__empty-title">No markdown files in ${name}.</h2>
                 <p class="manuscript__empty-body">
-                    Bookwright walked this folder and found no <code>.md</code> chapters
-                    (it skips <code>reviews/</code> and the <code>.bookwright</code> folder).
+                    MDGalley walked this folder and found no <code>.md</code> chapters
+                    (it skips <code>reviews/</code> and the <code>.mdgalley</code> folder).
                 </p>
                 <p class="manuscript__empty-body">
                     If you intended a different folder, press <kbd>⌘K</kbd> to open the
                     palette and click <em>select workspace</em>.
                     Otherwise, open the developer console: a line beginning with
-                    <code>[bookwright] workspace</code> shows what the file walker found.
+                    <code>[mdgalley] workspace</code> shows what the file walker found.
                 </p>
             </div>
         `;
@@ -77,8 +100,16 @@ export class Manuscript extends Component {
     }
 
     async refreshFromStore() {
-        if (!this.currentFile) return;
-        this.currentAnnotations = await this.deps.annotationStore.listFor(this.currentFile.filePath);
+        if (!this.currentFile && !this.continuous) return;
+        if (this.continuous) {
+            // Continuous mode: aggregate every file's annotations and let
+            // applyHighlights wrap each note inside its own file segment.
+            const all = await this.deps.annotationStore.listAll();
+            this.currentAnnotations = [];
+            for (const list of all.values()) this.currentAnnotations.push(...list);
+        } else {
+            this.currentAnnotations = await this.deps.annotationStore.listFor(this.currentFile.filePath);
+        }
         const states = applyHighlights(this.textEl, this.currentAnnotations);
         this.deps.bus.emit(Events.ANCHOR_STATES_RESOLVED, { states });
         this.deps.bus.emit(Events.LAYOUT_REFLOW, null);
@@ -96,7 +127,7 @@ export class Manuscript extends Component {
     }
 
     scheduleSelectionResolve() {
-        if (!this.currentFile) return;
+        if (!this.currentFile && !this.continuous) return;
         // mouseup fires after the selection settles; no debounce, no race.
         queueMicrotask(() => this.emitSelection());
     }
@@ -108,10 +139,18 @@ export class Manuscript extends Component {
             this.deps.bus.emit(Events.SELECTION_CLEARED);
             return;
         }
+        // In continuous mode, the anchor carries its own filePath captured
+        // from the file-segment DOM ancestor; in single-file mode, fall back
+        // to the loaded file. This lets the composer save against the right
+        // path regardless of which segment the reviewer is scrolled to.
+        const filePath = anchor.filePath ?? this.currentFile?.filePath ?? null;
+        const chapterTitle = anchor.filePath
+            ? null
+            : this.currentFile?.chapterTitle ?? null;
         this.deps.bus.emit(Events.SELECTION_MADE, {
             anchor,
-            filePath: this.currentFile.filePath,
-            chapterTitle: this.currentFile.chapterTitle,
+            filePath,
+            chapterTitle,
         });
     }
 

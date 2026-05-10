@@ -6,7 +6,7 @@
 import { Component } from "../lib/component.js";
 import { Events } from "../lib/eventBus.js";
 
-const RAIL_KEY = "bookwright:rail";
+const RAIL_KEY = "mdgalley:rail";
 
 export class Palette extends Component {
     constructor(rootEl, deps) {

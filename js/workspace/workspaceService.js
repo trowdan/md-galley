@@ -21,7 +21,7 @@ export class WorkspaceService {
 
     /** Prompt the user to pick a workspace folder. Stores the handle. */
     async pick() {
-        const handle = await window.showDirectoryPicker({ id: "bookwright-workspace", mode: "readwrite" });
+        const handle = await window.showDirectoryPicker({ id: "mdgalley-workspace", mode: "readwrite" });
         await this.acceptHandle(handle);
         return handle;
     }

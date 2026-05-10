@@ -1,16 +1,16 @@
-# Writer's audit: Bookwright
+# Writer's audit: MDGalley
 
 ## Verdict
 
-For a single one-hour pass on a single chapter, Bookwright is honestly better than VS Code preview plus a chat window: it gets out of your way, the popover is fast, the export is the right artefact for the AI handoff, and the line-anchored quotes are the kind of thing you would otherwise hand-stitch. It will not yet survive a real review cycle, though. The first time you reopen yesterday's notes and try to mark half of them done, or try to write a "this whole section drags" note without picking a passage, or wonder which of your 41 notes you have already actioned, you will feel the tool pushing back. Right now this is a one-shot capture tool that pretends to be a review tool. Authors who do one-pass-then-export will keep using it. Authors who iterate (most book authors) will fall back to red pen on a printout within two sessions, because paper at least lets you tick boxes.
+For a single one-hour pass on a single chapter, MDGalley is honestly better than VS Code preview plus a chat window: it gets out of your way, the popover is fast, the export is the right artefact for the AI handoff, and the line-anchored quotes are the kind of thing you would otherwise hand-stitch. It will not yet survive a real review cycle, though. The first time you reopen yesterday's notes and try to mark half of them done, or try to write a "this whole section drags" note without picking a passage, or wonder which of your 41 notes you have already actioned, you will feel the tool pushing back. Right now this is a one-shot capture tool that pretends to be a review tool. Authors who do one-pass-then-export will keep using it. Authors who iterate (most book authors) will fall back to red pen on a printout within two sessions, because paper at least lets you tick boxes.
 
 ## What this tool gets right
 
-1. **Line-anchored verbatim quotes in the export.** Reading `exporter.js`, every note carries `filePath`, nearest heading, line range, and the exact selected text. That is the format a downstream reviser actually needs. Markdown line numbers are stable across Bookwright sessions because front matter is counted (per README), so `lines 42 to 47` survives a re-pick of the workspace. This is the load-bearing decision and it is right.
+1. **Line-anchored verbatim quotes in the export.** Reading `exporter.js`, every note carries `filePath`, nearest heading, line range, and the exact selected text. That is the format a downstream reviser actually needs. Markdown line numbers are stable across MDGalley sessions because front matter is counted (per README), so `lines 42 to 47` survives a re-pick of the workspace. This is the load-bearing decision and it is right.
 2. **One file per session, deterministic ordering.** Sort by file path then by line. An author can diff two review files, or stack three sessions on one chapter, without the AI getting confused about ordering. That is how a working reviewer thinks about their own notes.
 3. **Cmd+Enter saves, Escape closes, popover auto-focuses the textarea.** The hotkey trio is what makes a note take 4 seconds instead of 12. Over 40 notes per chapter that is the difference between finishing a session and abandoning one.
 4. **Frontmatter hidden from the rendered view but counted in line numbers.** Subtle and correct. The author reads what the reader will read; the export points the AI at lines that match the source on disk. Most home-built reviewers get this wrong.
-5. **Workspace-folder model, not upload model.** The author keeps editing in their normal toolchain and refreshes Bookwright. No copy, no paste, no stale fork. This is the only way an author tolerates a second tool in the loop at all.
+5. **Workspace-folder model, not upload model.** The author keeps editing in their normal toolchain and refreshes MDGalley. No copy, no paste, no stale fork. This is the only way an author tolerates a second tool in the loop at all.
 
 ## Workflow gaps
 
@@ -40,17 +40,17 @@ For a single one-hour pass on a single chapter, Bookwright is honestly better th
 5. "Overall this chapter is too long. Worth splitting around the penalties section?" (chapter-level structural)
 6. "Tone-wise this section feels more punchy than Dibble. Compare to the §18 example in STYLE.md." (a meta-note about voice)
 
-**Why it matters:** A reviewer who cannot capture (1)-(6) in the tool will capture them somewhere else, and then half the review is in Bookwright and half is in Bear or Apple Notes. The export becomes incomplete and the whole "one file to the AI" promise breaks.
+**Why it matters:** A reviewer who cannot capture (1)-(6) in the tool will capture them somewhere else, and then half the review is in MDGalley and half is in Bear or Apple Notes. The export becomes incomplete and the whole "one file to the AI" promise breaks.
 
 **Fix:** Three additions. (1) An "orphan note" creation path (covered by the chapter-level note above). (2) Two new categories or a parallel "tag" axis: `todo` (private to author, do not ship to AI) and `keep` (positive note, ship to AI as "do not change"). (3) A `bookmark` flag, separate from category, that lets you save a passage with no comment and re-open the chapter scrolled to it. The annotation model is small enough that adding a `tags: string[]` field is cleaner than multiplying categories.
 
 ### [major] The export is a one-shot file with no roundtrip
 
-**The moment it bites:** You hand `2026-05-09-review.md` to the drafter agent. It applies eleven changes. Six it does well, three it does mediocre, two it refuses or punts. You now have no way to mark which were applied. Tomorrow you re-run the chapter through Bookwright and have to remember by hand which of yesterday's notes are still live.
+**The moment it bites:** You hand `2026-05-09-review.md` to the drafter agent. It applies eleven changes. Six it does well, three it does mediocre, two it refuses or punts. You now have no way to mark which were applied. Tomorrow you re-run the chapter through MDGalley and have to remember by hand which of yesterday's notes are still live.
 
-**Why it matters:** The README pitches Bookwright as the input to the drafter agent, but the loop is not closed. A real review tool needs a way to ingest "here is what changed" so the next session opens with five remaining notes, not 41 ghost notes plus eleven new ones. Without this, the export grows monotonically and the author starts pruning by hand in VS Code, which is exactly the workflow the tool was meant to replace.
+**Why it matters:** The README pitches MDGalley as the input to the drafter agent, but the loop is not closed. A real review tool needs a way to ingest "here is what changed" so the next session opens with five remaining notes, not 41 ghost notes plus eleven new ones. Without this, the export grows monotonically and the author starts pruning by hand in VS Code, which is exactly the workflow the tool was meant to replace.
 
-**Fix:** Two paths, pick one. The cheap one: when you re-export a session for the same chapter, generate a delta (`new since last export`, `still open`, `closed`) by hashing on `quote + heading + body`. The right one: have the drafter agent write `reviews/2026-05-09-review.applied.md` with each note marked `applied | skipped | needs-followup`, and have Bookwright read it back to flip annotation status on next load. The second path makes Bookwright a real review loop instead of a one-way capture form.
+**Fix:** Two paths, pick one. The cheap one: when you re-export a session for the same chapter, generate a delta (`new since last export`, `still open`, `closed`) by hashing on `quote + heading + body`. The right one: have the drafter agent write `reviews/2026-05-09-review.applied.md` with each note marked `applied | skipped | needs-followup`, and have MDGalley read it back to flip annotation status on next load. The second path makes MDGalley a real review loop instead of a one-way capture form.
 
 ### [major] Highlights silently vanish when the source moves
 
@@ -60,9 +60,9 @@ For a single one-hour pass on a single chapter, Bookwright is honestly better th
 
 **Fix:** When a highlight cannot be re-anchored on file load, show the note in the panel marked `stale` with the original quote and the new line number guess (fuzzy match on the quote string). Let the author confirm the new anchor with one click, or convert the note to chapter-level so it does not get lost. Do not silently skip.
 
-### [minor] No way to read the review file back inside Bookwright
+### [minor] No way to read the review file back inside MDGalley
 
-**The moment it bites:** You exported yesterday. You want to skim what you said before starting today's pass on chapter 2, because chapter 2 is going to surface chapter 1 dependencies. The review file is on disk but Bookwright does not show it. You open it in VS Code, which is the tool you were trying to escape.
+**The moment it bites:** You exported yesterday. You want to skim what you said before starting today's pass on chapter 2, because chapter 2 is going to surface chapter 1 dependencies. The review file is on disk but MDGalley does not show it. You open it in VS Code, which is the tool you were trying to escape.
 
 **Why it matters:** The author's actual mental model is "what have I been telling the AI to fix lately?" That is a queryable history, not a dead file.
 
@@ -153,11 +153,11 @@ The bigger question, though, is whether this file is what the drafter agent actu
 
 ## Bigger bets (optional)
 
-### 1. Make Bookwright the persistent home of the manuscript's editorial state, not just a session capture form
-Today Bookwright forgets you between sessions except by what is in IndexedDB. Tomorrow it could be the author's actual editorial dashboard: every chapter shows note count, most recent review date, open versus resolved breakdown by category, and a heat-map of where in the chapter notes cluster. The author opens Bookwright in the morning and immediately knows "chapter 7 has 14 open `accuracy` notes from last week, none resolved; that is today's work." This is a small UX shift and a large workflow shift, and it is what turns Bookwright from a tool you open occasionally into the place you live.
+### 1. Make MDGalley the persistent home of the manuscript's editorial state, not just a session capture form
+Today MDGalley forgets you between sessions except by what is in IndexedDB. Tomorrow it could be the author's actual editorial dashboard: every chapter shows note count, most recent review date, open versus resolved breakdown by category, and a heat-map of where in the chapter notes cluster. The author opens MDGalley in the morning and immediately knows "chapter 7 has 14 open `accuracy` notes from last week, none resolved; that is today's work." This is a small UX shift and a large workflow shift, and it is what turns MDGalley from a tool you open occasionally into the place you live.
 
 ### 2. Two-way sync with the drafter agent, with a diff view
-Right now the loop is: export, drafter applies changes, you read the new draft in Bookwright, you write new notes. The missing middle step is "show me what the drafter actually changed in response to each note." If the drafter writes back an `applied.md` per session that flips note statuses, Bookwright can render the panel as `41 notes: 27 applied, 9 skipped, 5 needs-discussion` and let the author iterate on the nine skipped ones without reading the whole revised chapter linearly. This is the difference between Bookwright as a file format and Bookwright as a review loop.
+Right now the loop is: export, drafter applies changes, you read the new draft in MDGalley, you write new notes. The missing middle step is "show me what the drafter actually changed in response to each note." If the drafter writes back an `applied.md` per session that flips note statuses, MDGalley can render the panel as `41 notes: 27 applied, 9 skipped, 5 needs-discussion` and let the author iterate on the nine skipped ones without reading the whole revised chapter linearly. This is the difference between MDGalley as a file format and MDGalley as a review loop.
 
 ### 3. A "voice diff" sidebar that compares the chapter against `STYLE.md` automatically
 The book has an unusually opinionated style guide (`STYLE.md` is 900 lines and has worked examples of right and wrong tone). A small static analyser could flag obvious mismatches as suggested annotations: heading not gerund-led, "let's dive in" present, em-dash count anomalous (project rule), unbolded glossary term on first appearance, `cite.py` `⚠️` not yet resolved. These would land in the panel as draft notes the author confirms or dismisses. It is a way of letting the style guide grade itself, and it would catch the kinds of issues a tired author misses on the fifth read of a chapter.

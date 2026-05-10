@@ -31,6 +31,13 @@ export function resolveAnchored(selection, textRoot) {
     const quote = range.toString().replace(/\s+/g, " ").trim();
     if (!quote) return null;
 
+    // Continuous-mode support: when the workspace is rendered as one text,
+    // each file lives inside a `<section data-file-path="…">`. Capture the
+    // path from the DOM so the composer creates the note against the right
+    // file regardless of which segment the reviewer was scrolled to.
+    const fileSegment = startBlock.closest("[data-file-path]");
+    const filePath = fileSegment?.getAttribute("data-file-path") ?? null;
+
     return {
         scope: "anchored",
         lineStart: Math.min(lineStart, lineEnd),
@@ -38,6 +45,7 @@ export function resolveAnchored(selection, textRoot) {
         quote,
         heading: findPrecedingHeading(startBlock, textRoot),
         block: captureBlockRef(startBlock, textRoot),
+        filePath,
         rect: range.getBoundingClientRect(),
         anchorEl: startBlock,
     };

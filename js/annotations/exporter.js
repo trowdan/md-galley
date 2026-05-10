@@ -14,10 +14,10 @@ import { CategoryLabels, Statuses } from "./annotation.js";
 // change to the export shape (added field, renamed field, changed semantics)
 // MUST bump this string and be reflected in tools/reviewer/SCHEMA.md.
 //
-// Format: "bookwright-review/MAJOR.MINOR".
+// Format: "mdgalley-review/MAJOR.MINOR".
 //   MAJOR -- breaking change (renamed/removed field, changed semantics)
 //   MINOR -- additive backward-compatible field
-export const REVIEW_SCHEMA_VERSION = "bookwright-review/1.4";
+export const REVIEW_SCHEMA_VERSION = "mdgalley-review/1.4";
 
 /**
  * @param {Map<string, import("./annotation.js").Annotation[]>} byFile
@@ -50,7 +50,7 @@ export function buildReviewMarkdown(byFile, meta = {}) {
     lines.push(`total_notes: ${tally.total}`);
     lines.push(`open: ${tally.open}`);
     lines.push(`resolved: ${tally.resolved}`);
-    lines.push(`generator: bookwright`);
+    lines.push(`generator: mdgalley`);
     lines.push("---");
     lines.push("");
     lines.push(`# Review notes (${date})`);

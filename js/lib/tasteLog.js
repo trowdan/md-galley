@@ -1,16 +1,16 @@
 // Taste log. Append-only chronological record of every annotation lifecycle
-// event in the workspace. Lives at <workspace>/.bookwright/taste.md.
+// event in the workspace. Lives at <workspace>/.mdgalley/taste.md.
 //
 // Purpose: future agents (a drafter that proposes notes, a manuscript-memory
 // agent that learns the reviewer's recurring concerns) read this file as
 // ground truth. The reviewer's taste is a first-class artefact, not a vibe
 // inside a vendor's model.
 //
-// Format (sibling contract `bookwright-taste/1.0`):
+// Format (sibling contract `mdgalley-taste/1.0`):
 //
 //   ---
-//   schema: bookwright-taste/1.0
-//   generator: bookwright
+//   schema: mdgalley-taste/1.0
+//   generator: mdgalley
 //   ---
 //
 //   # Taste log
@@ -31,11 +31,11 @@ import { TOOL_DIR } from "./toolDir.js";
 import { Events } from "./eventBus.js";
 
 const TASTE_FILE = "taste.md";
-const TASTE_SCHEMA_VERSION = "bookwright-taste/1.0";
+const TASTE_SCHEMA_VERSION = "mdgalley-taste/1.0";
 
 const HEADER = `---
 schema: ${TASTE_SCHEMA_VERSION}
-generator: bookwright
+generator: mdgalley
 ---
 
 # Taste log
@@ -46,7 +46,7 @@ Chronological record of every annotation lifecycle event in this workspace. Each
 
 Verbs: \`CREATE\` (new note), \`RESOLVE\` (note closed; payload is \`manual\` or \`applied\`), \`REOPEN\` (resolved note re-opened), \`DELETE\` (note removed), \`EXPORT\` (review file written; payload is the relative path and note count).
 
-This file is append-only. Bookwright never rewrites or compacts it. Downstream agents reading the log SHOULD treat it as the reviewer's taste artefact: which kinds of issues they flag, which they accept versus reject, which sections accumulate notes, how often they revert. Older entries remain authoritative even if the underlying notes have since been resolved or deleted.
+This file is append-only. MDGalley never rewrites or compacts it. Downstream agents reading the log SHOULD treat it as the reviewer's taste artefact: which kinds of issues they flag, which they accept versus reject, which sections accumulate notes, how often they revert. Older entries remain authoritative even if the underlying notes have since been resolved or deleted.
 
 `;
 

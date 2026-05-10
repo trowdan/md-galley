@@ -1,8 +1,8 @@
-# Visual direction: Bookwright v2
+# Visual direction: MDGalley v2
 
 ## Philosophy
 
-The book being reviewed is a regulation manual: 113 Articles, 180 Recitals, 13 Annexes, voiced like Dibble. The thing on the table is a manuscript, not a SaaS document. So the reviewer should look like a typesetter's proofing rig, not a Notion clone. The redesign treats Bookwright as a single instrument with one job — present 4,000 words of prose calmly enough that an author can stay inside it for ninety minutes — and treats every other concern (file switching, status filters, exports, the permission dance) as marginalia. Chrome retracts. Type does the work. The ornament budget gets spent in two places only: the typographic identity at the top of the column, and the line of margin notes running beside the prose. Nothing else carries decoration. No cards. No pills. No tints on tints. The look should read, on first encounter, as a publishing tool somebody made for themselves before software design existed as a discipline.
+The book being reviewed is a regulation manual: 113 Articles, 180 Recitals, 13 Annexes, voiced like Dibble. The thing on the table is a manuscript, not a SaaS document. So the reviewer should look like a typesetter's proofing rig, not a Notion clone. The redesign treats MDGalley as a single instrument with one job — present 4,000 words of prose calmly enough that an author can stay inside it for ninety minutes — and treats every other concern (file switching, status filters, exports, the permission dance) as marginalia. Chrome retracts. Type does the work. The ornament budget gets spent in two places only: the typographic identity at the top of the column, and the line of margin notes running beside the prose. Nothing else carries decoration. No cards. No pills. No tints on tints. The look should read, on first encounter, as a publishing tool somebody made for themselves before software design existed as a discipline.
 
 ## The signature move
 
@@ -50,7 +50,7 @@ When the gutter does not fit (narrow viewport, container query trips), notes fli
 - Linear / Notion / Vercel / Stripe corporate minimalism: rounded grey cards, soft shadows, a single accent.
 - Anthropic / OpenAI marketing pages: peach gradients, cream cards, generic editorial-but-not-quite type.
 - Generic ebook readers: sepia paper, page-curl, fake leather, drop caps as decoration.
-- The current Bookwright: cream + Iowan + blue + three-pane + rounded category pills.
+- The current MDGalley: cream + Iowan + blue + three-pane + rounded category pills.
 - Mid-2010s brutalism cosplay: 1 px borders on everything, monospace headlines, neon yellow on black.
 - AI tells: lavender-to-cyan gradients, generic "no notes yet" illustrations, every surface stacking border + shadow + tint.
 - The "design system" look: visible 8 px grids, captions labelled `caption-1`, every component in a Figma sticker sheet.
@@ -271,7 +271,7 @@ ASCII sketch of the default layout:
 
 ```
 +----------------------------------------------------------------------+
-|  [ Bookwright ]              ch. 1 · why the ai act exists           |
+|  [ MDGalley ]              ch. 1 · why the ai act exists           |
 |                                            open(31)  resolved(8)  ⌘K |
 +--------+-----------------------------------------+-------------------+
 |        |                                         |                   |
@@ -297,7 +297,7 @@ ASCII sketch of the default layout:
 
 Where everything lives.
 
-**App bar (top, 56 px, paper background, single 1 px hairline beneath).** Left: the wordmark "Bookwright" set in Sectra Medium 15 px. Right: chapter title set in Sectra Regular (truncated with text-overflow), then a counter `open(31) resolved(8)`, then a single icon-button row: status filter (open/resolved/all), command palette trigger, theme toggle, export. No "save review"; saves are continuous (the v1 audit's complaint about unsaved-state friction goes away if there is no manual save). The export button reads `export 31 notes` in lowercase mono, no icon. There is no separate workspace label; the chapter title is the chapter title, and the workspace path lives behind a mono badge inside the command palette.
+**App bar (top, 56 px, paper background, single 1 px hairline beneath).** Left: the wordmark "MDGalley" set in Sectra Medium 15 px. Right: chapter title set in Sectra Regular (truncated with text-overflow), then a counter `open(31) resolved(8)`, then a single icon-button row: status filter (open/resolved/all), command palette trigger, theme toggle, export. No "save review"; saves are continuous (the v1 audit's complaint about unsaved-state friction goes away if there is no manual save). The export button reads `export 31 notes` in lowercase mono, no icon. There is no separate workspace label; the chapter title is the chapter title, and the workspace path lives behind a mono badge inside the command palette.
 
 **Manuscript (centre).** The reading column. Sectra 19 px, 62 ch measure, baseline-aligned. Section rules. No frames, no border, no shadow, no card. The paper background runs to the full viewport width.
 
@@ -313,9 +313,9 @@ Where everything lives.
 
 **Filter (chrome bar).** Three buttons: `open` `resolved` `all`. Plus a category multi-select that lives behind a single button labelled by count (`6 categories` collapses to `prose, accuracy +4` when narrowed). State stored in `localStorage`.
 
-**Empty state.** When the workspace is opened for the first time, the manuscript area renders a typeset card-less notice: chapter-display-sized "Bookwright", a sub-line in mono ("read your manuscript like a book"), and a single ink button "open workspace". When a workspace is open but the file has no notes, the gutter shows one mono line near the top: `no notes on this chapter. select to add. n for chapter-level, s for section-level.` Six small category dots beneath. That is the entire empty state. No illustration.
+**Empty state.** When the workspace is opened for the first time, the manuscript area renders a typeset card-less notice: chapter-display-sized "MDGalley", a sub-line in mono ("read your manuscript like a book"), and a single ink button "open workspace". When a workspace is open but the file has no notes, the gutter shows one mono line near the top: `no notes on this chapter. select to add. n for chapter-level, s for section-level.` Six small category dots beneath. That is the entire empty state. No illustration.
 
-**Permission-gate (the moment of first contact).** Full viewport. Sectra Display: "Bookwright reads files from your disk." Body in Sectra Regular: "This needs Chrome, Edge, Brave, or Arc. Your manuscript never leaves your machine." Then the single ink button "open workspace". When a workspace exists but permission lapsed: same surface, but the title becomes "Reconnect to AIAct-for-Techies" and the body names the path. No card, no shadow, no border. It reads like a frontispiece, not a dialog.
+**Permission-gate (the moment of first contact).** Full viewport. Sectra Display: "MDGalley reads files from your disk." Body in Sectra Regular: "This needs Chrome, Edge, Brave, or Arc. Your manuscript never leaves your machine." Then the single ink button "open workspace". When a workspace exists but permission lapsed: same surface, but the title becomes "Reconnect to AIAct-for-Techies" and the body names the path. No card, no shadow, no border. It reads like a frontispiece, not a dialog.
 
 **Export.** Single button in the chrome bar, lowercase mono: `export 31 notes`. Click writes `reviews/YYYY-MM-DD-review.md` to the workspace and shows a small mono toast at the bottom centre: `wrote 2026-05-09-review.md · 31 notes`. Toast is paper background, single ink hairline, no fill.
 
@@ -738,7 +738,7 @@ Pinned-rail mode (`cmd-\`) reuses the same markup, restyled to a 240 px left col
 ```html
 <header class="chrome">
     <div class="chrome__left">
-        <button class="chrome__brand">Bookwright</button>
+        <button class="chrome__brand">MDGalley</button>
         <span class="chrome__sep" aria-hidden="true">/</span>
         <span class="chrome__chapter">ch. 1 · why the ai act exists</span>
     </div>
@@ -858,7 +858,7 @@ Empty / no-selection variant: keys `n` (chapter) and `s` (section, anchored to n
 - The brightness-flash focus animation. Focused note hairline goes to `--mark`; the manuscript line-start gutter number wakes up; nothing pulses.
 - The gradient-tinted comment_card border-strong hover lift `translateY(-1px)`. Notes do not lift; they have no card to lift.
 - The shadow tokens `--shadow-1/2/3`. Deleted. Nothing in the new design casts a shadow.
-- The "Bookwright. Margin notes for living manuscripts." overwrought title. Title becomes `<chapter title> · Bookwright`, set dynamically.
+- The "MDGalley. Margin notes for living manuscripts." overwrought title. Title becomes `<chapter title> · MDGalley`, set dynamically.
 - The `comment-count` pill with `border-radius: 999px`. The chrome's count is mono text, no fill.
 - The eight-symbol icon row in the chrome. Replaced by three text actions (`open / resolved / all`), one count, two minimal icon-buttons (palette, theme), and the export action.
 - "No markdown files found" leaking into the sidebar while the reader still says "Open a workspace to begin". The workspace empty-state is now a single full-viewport notice.

@@ -1,14 +1,14 @@
 // Drafter roundtrip. When a downstream agent applies review notes to the
 // source, it writes `reviews/YYYY-MM-DD-applied.md` listing the IDs of the
-// notes it acted on. On the next workspace open, Bookwright reads every
+// notes it acted on. On the next workspace open, MDGalley reads every
 // `*-applied.md` file under `reviews/` and flips matching annotations from
 // `open` to `resolved` so the reviewer sees the addressed notes settled
 // without manual click-through.
 //
-// File format (bookwright-applied/1.0):
+// File format (mdgalley-applied/1.0):
 //   ---
 //   applied_date: YYYY-MM-DD
-//   schema: bookwright-applied/1.0
+//   schema: mdgalley-applied/1.0
 //   generator: <agent name>
 //   applied_count: N
 //   ---
@@ -18,7 +18,7 @@
 //   - <annotation-id>     # optional free-text comment after the id
 //   - <annotation-id>
 //
-// Bookwright only needs the IDs from the body. Every line whose first
+// MDGalley only needs the IDs from the body. Every line whose first
 // non-whitespace token after an optional `-` is a 6+ char id-shaped string
 // counts. Front matter is parsed loosely; only `schema` and `generator` are
 // inspected, both informationally.
@@ -26,7 +26,7 @@
 const APPLIED_FILE_RE = /^\d{4}-\d{2}-\d{2}-applied\.md$/;
 const ID_LINE_RE = /^[\s-]*([A-Za-z0-9][A-Za-z0-9_-]{5,})/gm;
 
-export const APPLIED_SCHEMA_VERSION = "bookwright-applied/1.0";
+export const APPLIED_SCHEMA_VERSION = "mdgalley-applied/1.0";
 
 /** Read every `reviews/*-applied.md` in the workspace and return the set
  *  of annotation IDs they reference. Missing `reviews/` directory or
