@@ -24,6 +24,7 @@ export class Toc extends Component {
         this.entries = null;
         this.collapsed = loadCollapsed();
         this.activeId = null;
+        this.occludedBlocks = [];
         this.scrollRaf = false;
         this.onWindowScroll = this.onWindowScroll.bind(this);
         // Set body[data-toc] eagerly so layout-dependent CSS (`.app-shell`
@@ -79,6 +80,8 @@ export class Toc extends Component {
         this.entries = null;
         window.removeEventListener("scroll", this.onWindowScroll);
         this.activeId = null;
+        for (const el of this.occludedBlocks) el.classList.remove("is-stuck-occluded");
+        this.occludedBlocks = [];
         for (const old of this.textEl.querySelectorAll(".toc-sentinel")) old.remove();
     }
 
@@ -180,15 +183,37 @@ export class Toc extends Component {
         // Entries are in DOM order. The active heading is the latest one
         // whose natural-flow top has crossed the threshold — same rule as
         // the sticky paint order picks the latest-in-DOM heading to show.
+        // While we're walking, also collect the actual sticky containers
+        // (the .block wrapping each h1/h2, or .file-segment__head) so we
+        // can hide all but the latest one — otherwise a taller earlier
+        // heading-block (e.g. a 2-line title) peeks out below a shorter
+        // newer one (a 1-line title), since the sticky-deepest paint trick
+        // only works when stuck blocks share the same height.
         let next = null;
+        const stuckBlocks = [];
         for (const entry of this.entries) {
             // Read the sentinel's viewport top directly: the sentinel is in
             // normal flow (not sticky), so this is always the heading's true
             // current viewport position.
             const top = sentinelTop(entry);
-            if (top < stickyTop) next = entry.id;
-            else break;
+            if (top < stickyTop) {
+                next = entry.id;
+                const block = stickyBlockFor(entry);
+                if (block) stuckBlocks.push(block);
+            } else break;
         }
+        // The latest stuck block is the one the reader should see; hide every
+        // earlier stuck block so nothing bleeds through underneath it.
+        const activeBlock = stuckBlocks.length > 0 ? stuckBlocks[stuckBlocks.length - 1] : null;
+        for (const el of this.occludedBlocks) el.classList.remove("is-stuck-occluded");
+        const occluded = [];
+        for (const el of stuckBlocks) {
+            if (el !== activeBlock) {
+                el.classList.add("is-stuck-occluded");
+                occluded.push(el);
+            }
+        }
+        this.occludedBlocks = occluded;
         // Top of doc (no heading passed yet): highlight the first one so the
         // rail isn't context-less. Mirrors what the reader sees: they're in
         // the lead-up to the first section.
@@ -272,6 +297,19 @@ function sentinelTop(entry) {
     if (entry.sentinel) return entry.sentinel.getBoundingClientRect().top;
     // Fallback: the heading's own rect (less reliable when sticky).
     return entry.el.getBoundingClientRect().top;
+}
+
+/** Element that actually carries `position: sticky` for this heading.
+ *  Mirrors the CSS in document.css: `.block` for h1/h2, `.file-segment__head`
+ *  for file-segment titles, nothing for h3 (h3 doesn't stick). */
+function stickyBlockFor(entry) {
+    const el = entry.el;
+    if (el.classList.contains("file-segment__title")) {
+        return el.closest(".file-segment__head");
+    }
+    const tag = el.tagName.toLowerCase();
+    if (tag === "h1" || tag === "h2") return el.closest(".block");
+    return null;
 }
 
 function levelFor(el) {

@@ -154,16 +154,28 @@
     z-index: 5;
     margin: calc(var(--line) * 1.5) 0 var(--line);
     padding-bottom: calc(var(--line) * 0.25);
+    transition: opacity 180ms ease-out;
 }
 .file-segment__head {
     position: sticky;
     top: calc(var(--chrome-h) + 36px);
     background: var(--paper);
     z-index: 5;
+    transition: opacity 180ms ease-out;
 }
 .document__body .block:has(> :is(h1, h2)) > :is(h1, h2) {
     margin-top: 0;
     margin-bottom: 0;
+}
+/* Sticky-deepest paint relies on the latest-in-DOM block fully covering
+ * earlier ones. That breaks when the earlier heading is taller (e.g. a
+ * 2-line title above a 1-line one): the taller block's bottom peeks out
+ * below the shorter one. toc.js tags every stuck block except the active
+ * one with this class so it fades out of the stack instead of bleeding
+ * through. Fade (not hide) so the transition reads as motion, not a glitch. */
+.document__body .block.is-stuck-occluded,
+.file-segment__head.is-stuck-occluded {
+    opacity: 0;
 }
 /* Programmatic jumps (TOC click) land the heading just *above* the sticky
  * threshold so sticky immediately engages and the clicked heading wins the
