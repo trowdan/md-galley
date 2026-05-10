@@ -227,6 +227,8 @@
     padding: 0 0 0.15em;
     transition: color 140ms ease-out, border-color 140ms ease-out;
     cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 .filter-strip__pass-chip:hover { color: var(--ink); }
 .filter-strip__pass-chip[data-state="active"] {

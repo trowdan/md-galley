@@ -61,7 +61,11 @@ export class FilterStrip extends Component {
         if (this.activePass) {
             this.passEl.dataset.state = "active";
             this.passEl.title = `Active pass: ${this.activePass.name}. Click to switch, end, or start another.`;
-            if (label) label.textContent = `pass: ${this.activePass.name}`;
+            // Cap the visible name so the chip stays inside the margin column.
+            // Full name remains in the title above for hover.
+            const name = this.activePass.name;
+            const shown = name.length > 24 ? `${name.slice(0, 23)}…` : name;
+            if (label) label.textContent = `pass: ${shown}`;
         } else {
             this.passEl.dataset.state = "none";
             this.passEl.title = "Start or resume a named pass.";
