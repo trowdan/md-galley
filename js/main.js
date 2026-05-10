@@ -24,6 +24,7 @@ import { Palette } from "./ui/palette.js";
 import { Toast } from "./ui/toast.js";
 import { FilterStrip } from "./ui/filterStrip.js";
 import { PassDialog } from "./ui/passDialog.js";
+import { Toc } from "./ui/toc.js";
 
 const supported = WorkspaceService.isSupported();
 
@@ -59,6 +60,8 @@ async function bootApp() {
     document.getElementById("filter-strip").hidden = false;
     document.getElementById("app-shell").hidden = false;
 
+    const toc = new Toc(document.getElementById("toc-rail"), deps);
+    deps.toc = toc;
     const components = [
         new Chrome(document.getElementById("chrome"), deps),
         new FilterStrip(document.getElementById("filter-strip"), deps),
@@ -67,6 +70,7 @@ async function bootApp() {
         new Palette(document.getElementById("palette"), deps),
         new Toast(document.getElementById("toast"), deps),
         new PassDialog(document.getElementById("pass-dialog"), deps),
+        toc,
     ];
     components.forEach((c) => c.mount());
     notesPersister.mount();

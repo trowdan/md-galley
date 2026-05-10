@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="styles/chrome.css">
     <link rel="stylesheet" href="styles/marginalia.css">
     <link rel="stylesheet" href="styles/palette.css">
+    <link rel="stylesheet" href="styles/toc.css">
     <link rel="stylesheet" href="styles/gate.css">
 </head>
 
@@ -110,6 +111,13 @@
             </button>
         </div>
     </nav>
+
+    <button id="toc-toggle" class="toc-toggle" type="button"
+            aria-controls="toc-rail" aria-expanded="true" aria-label="Toggle outline"
+            title="Toggle outline">
+        <span class="toc-toggle__glyph" aria-hidden="true">‹</span>
+    </button>
+    <aside id="toc-rail" class="toc-rail" aria-label="Document outline"></aside>
 
     <main id="app-shell" class="app-shell" hidden>
         <article id="manuscript" class="manuscript" data-show-lines="false" data-filter="open">
