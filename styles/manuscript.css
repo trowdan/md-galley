@@ -139,6 +139,50 @@
     margin: calc(var(--line) * 1.5) 0 calc(var(--line) * 0.5);
 }
 
+/* Sticky-deepest behaviour: stickiness lives on the wrapper, not the heading
+ * itself. Every body block is rendered as `<div class="block">` (renderer.js);
+ * each heading lives inside its own .block. We make heading-blocks (and the
+ * file-segment header in continuous mode) sticky at the same top offset
+ * (chrome + filter strip). They share `top` and paint an opaque paper
+ * background, so the latest one in DOM order visually covers earlier ones —
+ * the reader always sees the heading they're currently inside.
+ *
+ * The heading's native margin-top (2.5 lines) lives INSIDE the sticky block,
+ * so when stuck it would render as a tall paper-coloured void above the
+ * heading text. We zero the heading's vertical margins inside heading-blocks
+ * and put the in-flow breathing room on the *block's* own margin, which sits
+ * outside the sticky-painted area and only shows in normal flow.
+ *
+ * `:has()` is fine here — broadly supported, and the gate already restricts
+ * the app to Chromium browsers. */
+.manuscript__body .block:has(> :is(h1, h2, h3)) {
+    position: sticky;
+    top: calc(var(--chrome-h) + 36px);
+    background: var(--paper);
+    z-index: 5;
+    margin: calc(var(--line) * 1.5) 0 var(--line);
+    padding-bottom: calc(var(--line) * 0.25);
+}
+.file-segment__head {
+    position: sticky;
+    top: calc(var(--chrome-h) + 36px);
+    background: var(--paper);
+    z-index: 5;
+}
+.manuscript__body .block:has(> :is(h1, h2, h3)) > :is(h1, h2, h3) {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+/* Programmatic jumps (TOC click) land the heading just *above* the sticky
+ * threshold so sticky immediately engages and the clicked heading wins the
+ * latest-in-DOM tiebreak. If we landed it below the threshold, the previous
+ * sticky heading would still be painted on top and the user wouldn't see
+ * anything change. */
+.manuscript__body :is(h1, h2, h3),
+.file-segment__title {
+    scroll-margin-top: calc(var(--chrome-h) + 36px - 4px);
+}
+
 .manuscript__body hr {
     border: 0;
     text-align: center;
