@@ -147,7 +147,7 @@
  *
  * `:has()` is fine here — broadly supported, and the gate already restricts
  * the app to Chromium browsers. */
-.document__body .block:has(> :is(h1, h2, h3)) {
+.document__body .block:has(> :is(h1, h2)) {
     position: sticky;
     top: calc(var(--chrome-h) + 36px);
     background: var(--paper);
@@ -161,7 +161,7 @@
     background: var(--paper);
     z-index: 5;
 }
-.document__body .block:has(> :is(h1, h2, h3)) > :is(h1, h2, h3) {
+.document__body .block:has(> :is(h1, h2)) > :is(h1, h2) {
     margin-top: 0;
     margin-bottom: 0;
 }
