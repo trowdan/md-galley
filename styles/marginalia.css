@@ -9,8 +9,7 @@
     right: 0;
     top: 0;
     transform: translateY(calc(var(--offset-px, 0) * 1px));
-    transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1),
-                opacity 140ms ease-out,
+    transition: opacity 140ms ease-out,
                 color 140ms ease-out,
                 border-left-color 140ms ease-out;
     padding-left: calc(var(--gap-column) * 0.5);
