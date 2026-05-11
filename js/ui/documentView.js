@@ -42,7 +42,7 @@ export class DocumentView extends Component {
         this.continuous = true;
         this.currentFile = null;
         this.refreshFromStore();
-        this.root.parentElement?.scrollTo?.({ top: 0 });
+        window.scrollTo({ top: 0, left: 0 });
     }
 
     /** In continuous mode, FILE_SELECTED becomes a scroll-to action against
@@ -90,7 +90,7 @@ export class DocumentView extends Component {
 
         this.currentFile = { filePath, documentTitle: documentTitle ?? data?.title ?? null };
         this.refreshFromStore();
-        this.root.parentElement?.scrollTo?.({ top: 0 });
+        window.scrollTo({ top: 0, left: 0 });
     }
 
     onWorkspaceCleared() {
